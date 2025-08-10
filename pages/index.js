@@ -10,13 +10,19 @@ export default function Home() {
   const hostRef = useRef(null);
   const [user, setUser] = useState(null);
   const [rows, setRows] = useState([]);
+  const [userMap, setUserMap] = useState({}); // owner -> name
+
+  // Farben für jeden Nutzer (UUID anpassen!)
+  const userColors = {
+    'UUID_VON_DIR': '#4cafef',
+    'UUID_VON_DEINER_FREUNDIN': '#ef5350'
+  };
 
   // Session laden
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
-        // Simple Login-Prompt (E-Mail+Passwort)
         const email = prompt('E-Mail:');
         const password = prompt('Passwort:');
         if (!email || !password) return;
@@ -28,18 +34,28 @@ export default function Home() {
     })();
   }, []);
 
+  // Nutzer-Map laden (damit wir Namen anzeigen können)
+  async function loadUsers() {
+    const { data, error } = await supabase.from('profiles').select('id, display_name');
+    if (!error && data) {
+      const map = {};
+      data.forEach(p => map[p.id] = p.display_name || p.id);
+      setUserMap(map);
+    }
+  }
+
   // Events laden
-  async function load() {
+  async function loadEvents() {
     const { data, error } = await supabase.from('events').select('*').order('starts_at');
     if (!error) setRows(data || []);
-    else console.error(error);
   }
 
   // Kalender mounten/aktualisieren
   useEffect(() => {
     if (!user) return;
     (async () => {
-      await load();
+      await loadUsers();
+      await loadEvents();
       if (hostRef.current && !calRef.current) {
         const calendar = new Calendar(hostRef.current, {
           plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -49,10 +65,11 @@ export default function Home() {
           events: () =>
             rows.map(e => ({
               id: e.id,
-              title: e.title,
+              title: `${e.title} (${userMap[e.owner] || 'Unbekannt'})`,
               start: e.starts_at,
               end: e.ends_at ?? undefined,
-              allDay: e.all_day
+              allDay: e.all_day,
+              backgroundColor: userColors[e.owner] || '#9e9e9e'
             })),
           select: async (info) => {
             const title = prompt('Titel?');
@@ -64,7 +81,7 @@ export default function Home() {
               ends_at: info.endStr,
               all_day: info.allDay
             });
-            await load();
+            await loadEvents();
           },
           eventDrop: async ({ event }) => {
             await supabase.from('events').update({
@@ -72,42 +89,51 @@ export default function Home() {
               ends_at: event.end?.toISOString() ?? null,
               all_day: event.allDay
             }).eq('id', event.id);
-            await load();
+            await loadEvents();
           },
           eventResize: async ({ event }) => {
             await supabase.from('events').update({
               starts_at: event.start?.toISOString(),
               ends_at: event.end?.toISOString() ?? null
             }).eq('id', event.id);
-            await load();
+            await loadEvents();
           },
           eventClick: async ({ event }) => {
             if (confirm('Löschen?')) {
               await supabase.from('events').delete().eq('id', event.id);
-              await load();
+              await loadEvents();
             }
           }
         });
         calendar.render();
         calRef.current = calendar;
       } else if (calRef.current) {
-        // neu laden
         calRef.current.removeAllEventSources();
         calRef.current.addEventSource(rows.map(e => ({
-          id: e.id, title: e.title, start: e.starts_at, end: e.ends_at ?? undefined, allDay: e.all_day
+          id: e.id,
+          title: `${e.title} (${userMap[e.owner] || 'Unbekannt'})`,
+          start: e.starts_at,
+          end: e.ends_at ?? undefined,
+          allDay: e.all_day,
+          backgroundColor: userColors[e.owner] || '#9e9e9e'
         })));
       }
     })();
-    return () => { /* nothing */ };
-  }, [user, rows]);
+  }, [user, rows, userMap]);
 
-  if (!user) return <main style={{padding:16}}>Lade…</main>;
+  if (!user) return <main style={{ padding: 16 }}>Lade…</main>;
 
   return (
     <main style={{ padding: 16 }}>
-      <header style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-        <h1>Kalender</h1>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h1>Gemeinsamer Kalender</h1>
         <button onClick={async () => { await supabase.auth.signOut(); location.reload(); }}>Logout</button>
+      </header>
+      <div ref={hostRef} />
+    </main>
+  );
+}
+
       </header>
       <div ref={hostRef} />
     </main>
