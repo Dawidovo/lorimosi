@@ -6,12 +6,15 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { supabase } from "../lib/supabaseClient";
 
+
 // FullCalendar nur clientseitig laden (wichtig in Next.js)
 const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
+
 
 export default function CalendarComponent() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  
 
   // einfache User-Farbzuordnung (optional anpassen)
   const getUserColor = useCallback((userId) => {
