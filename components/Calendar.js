@@ -6,23 +6,18 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { supabase } from "../lib/supabaseClient";
 
-
-// FullCalendar nur clientseitig laden (wichtig in Next.js)
 const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
 
-
-export default function CalendarComponent() {
+export default function CalendarComponent({ userId }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
-  
 
-  // einfache User-Farbzuordnung (optional anpassen)
-  const getUserColor = useCallback((userId) => {
+  const getUserColor = useCallback((uid) => {
     const colors = {
-      "88a63a7f-b350-4704-9b1e-44445a6f33bb": "#4cafef", // Blau
-      "fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc": "#ef5350", // Rot
+      "88a63a7f-b350-4704-9b1e-44445a6f33bb": "#4cafef",
+      "fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc": "#ef5350",
     };
-    return colors[userId] || "#9e9e9e"; // Grau
+    return colors[uid] || "#9e9e9e";
   }, []);
 
   const loadEvents = useCallback(async () => {
@@ -30,13 +25,7 @@ export default function CalendarComponent() {
     const { data, error } = await supabase
       .from("events")
       .select(`
-        id,
-        title,
-        starts_at,
-        ends_at,
-        location,
-        description,
-        created_by,
+        id, title, starts_at, ends_at, location, description, created_by,
         profiles (display_name)
       `)
       .order("starts_at", { ascending: true });
@@ -65,29 +54,25 @@ export default function CalendarComponent() {
     setLoading(false);
   }, [getUserColor]);
 
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+  useEffect(() => { loadEvents(); }, [loadEvents]);
 
-  // Termin durch Auswahl anlegen (TimeGrid = mit Uhrzeit)
   const handleSelect = useCallback(async (sel) => {
-    const title = window.prompt("Titel für den Termin?");
-    if (!title) {
+    if (!userId) {
+      alert("Bitte einloggen, um Termine zu erstellen.");
       sel.view.calendar.unselect();
       return;
     }
 
-    // angemeldeten User für created_by holen
-    const { data: userData } = await supabase.auth.getUser();
-    const createdBy = userData?.user?.id || null;
+    const title = window.prompt("Titel für den Termin?");
+    if (!title) { sel.view.calendar.unselect(); return; }
 
     const payload = {
       title,
       starts_at: sel.startStr,
-      ends_at: sel.endStr, // kommt aus FullCalendar inkl. Uhrzeit
+      ends_at: sel.endStr,
       location: null,
       description: null,
-      created_by: createdBy,
+      created_by: userId,
     };
 
     const { data, error } = await supabase
@@ -98,11 +83,7 @@ export default function CalendarComponent() {
         profiles (display_name)
       `);
 
-    if (error) {
-      console.error("Fehler beim Anlegen:", error);
-      alert("Konnte Termin nicht anlegen.");
-      return;
-    }
+    if (error) { console.error(error); alert("Konnte Termin nicht anlegen."); return; }
 
     const ev = data[0];
     sel.view.calendar.addEvent({
@@ -118,33 +99,22 @@ export default function CalendarComponent() {
         display_name: ev.profiles?.display_name || "Unbekannt",
       },
     });
-
     sel.view.calendar.unselect();
-  }, [getUserColor]);
+  }, [userId, getUserColor]);
 
-  // Drag/Drop & Resize speichern
   const handleEventChange = useCallback(async (chg) => {
     const ev = chg.event;
-
-    // Falls FullCalendar kein end setzt, 1h default
     const startISO = ev.start?.toISOString();
-    const endISO =
-      ev.end?.toISOString() ||
-      new Date(ev.start.getTime() + 60 * 60 * 1000).toISOString();
+    const endISO = ev.end?.toISOString() || new Date(ev.start.getTime() + 60*60*1000).toISOString();
 
     const { error } = await supabase
       .from("events")
       .update({ starts_at: startISO, ends_at: endISO })
       .eq("id", ev.id);
 
-    if (error) {
-      console.error("Update-Fehler:", error);
-      alert("Konnte Änderung nicht speichern. Rückgängig gemacht.");
-      chg.revert();
-    }
+    if (error) { console.error(error); alert("Änderung fehlgeschlagen."); chg.revert(); }
   }, []);
 
-  // Klick: Details anzeigen + Löschen anbieten
   const handleEventClick = useCallback(async (click) => {
     const ev = click.event;
     const details =
@@ -154,15 +124,11 @@ export default function CalendarComponent() {
       `Ort:   ${ev.extendedProps.location || "—"}\n` +
       `Beschreibung: ${ev.extendedProps.description || "—"}\n` +
       `Erstellt von: ${ev.extendedProps.display_name}\n\n` +
-      `Löschen? (OK = löschen, Abbrechen = schließen)`;
+      `Löschen? (OK = löschen)`;
 
     if (window.confirm(details)) {
       const { error } = await supabase.from("events").delete().eq("id", ev.id);
-      if (error) {
-        console.error("Lösch-Fehler:", error);
-        alert("Konnte Termin nicht löschen.");
-        return;
-      }
+      if (error) { console.error(error); alert("Konnte Termin nicht löschen."); return; }
       ev.remove();
     }
   }, []);
@@ -172,17 +138,13 @@ export default function CalendarComponent() {
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "dayGridMonth,timeGridWeek,timeGridDay",
-        }}
+        headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }}
         events={events}
-        selectable
+        selectable={!!userId}
         selectMirror
         editable
         eventResizableFromStart
-        longPressDelay={250}           // mobile long press
+        longPressDelay={250}
         select={handleSelect}
         eventDrop={handleEventChange}
         eventResize={handleEventChange}
@@ -192,6 +154,12 @@ export default function CalendarComponent() {
         nowIndicator
         height="auto"
       />
+      {loading && <p style={{ marginTop: 8, color: "#6b7280" }}>Lade Termine…</p>}
+      {!userId && <p style={{ marginTop: 8 }}>Nicht eingeloggt – Erstellen/Ändern ist deaktiviert.</p>}
+    </div>
+  );
+}
+
 
       {loading && <p style={{ marginTop: 8, color: "#6b7280" }}>Lade Termine…</p>}
     </div>
