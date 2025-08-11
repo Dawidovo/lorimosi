@@ -2,20 +2,21 @@
   "name": "couple-calendar",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+  "scripts": { "dev": "next dev", "build": "next build", "start": "next start" },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "@fullcalendar/core": "^6.1.14",
+    "@fullcalendar/daygrid": "^6.1.14",
+    "@fullcalendar/timegrid": "^6.1.14",
+    "@fullcalendar/interaction": "^6.1.14"
   },
-"dependencies": {
-  "next": "14.2.3",
-  "react": "18.2.0",
-  "react-dom": "18.2.0",
-  "@supabase/supabase-js": "^2.45.0",
-  "@fullcalendar/core": "^6.1.14",
-  "@fullcalendar/daygrid": "^6.1.14",
-  "@fullcalendar/timegrid": "^6.1.14",
-  "@fullcalendar/interaction": "^6.1.14"
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "@types/react": "^18.2.73",
+    "@types/react-dom": "^18.2.25",
+    "@types/node": "^20.14.12"
   }
-
 }
