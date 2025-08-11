@@ -1,19 +1,9 @@
-import Head from 'next/head';
+// pages/_app.js
+import "@fullcalendar/core/index.css";
+import "@fullcalendar/daygrid/index.css";
+import "@fullcalendar/timegrid/index.css";
+import "../styles/globals.css"; // falls vorhanden – sonst Zeile löschen
 
-export default function App({ Component, pageProps }) {
-  return (
-    <>
-      <Head>
-        <link
-          href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.14/main.min.css"
-          rel="stylesheet"
-        />
-        <link
-          href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.14/main.min.css"
-          rel="stylesheet"
-        />
-      </Head>
-      <Component {...pageProps} />
-    </>
-  );
+export default function MyApp({ Component, pageProps }) {
+  return <Component {...pageProps} />;
 }
