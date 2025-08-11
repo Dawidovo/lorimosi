@@ -1,30 +1,35 @@
 // lorimosi/components/calender.js
-import { useEffect, useState } from "react";
-import FullCalendar from "@fullcalendar/react";
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { supabase } from "../lib/supabaseClient";
 
+// WICHTIG: FullCalendar nur im Client laden
+const FullCalendar = dynamic(() => import("@fullcalendar/react"), {
+  ssr: false,
+});
+
 export default function CalendarComponent() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Farben pro User-ID (einfaches Beispiel)
-  function getUserColor(userId) {
+  const getUserColor = useCallback((userId) => {
     const colors = {
-      "88a63a7f-b350-4704-9b1e-44445a6f33bb": "#4cafef", // Blau
-      "fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc": "#ef5350", // Rot
+      "88a63a7f-b350-4704-9b1e-44445a6f33bb": "#4cafef",
+      "fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc": "#ef5350",
     };
-    return colors[userId] || "#9e9e9e"; // Grau, falls User unbekannt
-  }
+    return colors[userId] || "#9e9e9e";
+  }, []);
 
-  async function loadEvents() {
+  const loadEvents = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("events")
-      .select(
-        `
+      .select(`
         id,
         title,
         starts_at,
@@ -33,8 +38,7 @@ export default function CalendarComponent() {
         description,
         created_by,
         profiles (display_name)
-      `
-      )
+      `)
       .order("starts_at", { ascending: true });
 
     if (error) {
@@ -48,7 +52,6 @@ export default function CalendarComponent() {
       title: `${event.title} (${event.profiles?.display_name || "Unbekannt"})`,
       start: event.starts_at,
       end: event.ends_at,
-      allDay: isAllDayRange(event.starts_at, event.ends_at),
       backgroundColor: getUserColor(event.created_by),
       extendedProps: {
         location: event.location,
@@ -60,40 +63,23 @@ export default function CalendarComponent() {
 
     setEvents(mapped);
     setLoading(false);
-  }
+  }, [getUserColor]);
 
   useEffect(() => {
     loadEvents();
-  }, []);
+  }, [loadEvents]);
 
-  // Hilfsfunktion: wenn Start 00:00 und End 00:00 des Folgetags -> allDay
-  function isAllDayRange(startISO, endISO) {
-    try {
-      const s = new Date(startISO);
-      const e = new Date(endISO);
-      const startIsMidnight = s.getHours() === 0 && s.getMinutes() === 0;
-      const endIsMidnight = e.getHours() === 0 && e.getMinutes() === 0;
-      // all-day, wenn exakt ganze Tage
-      return startIsMidnight && endIsMidnight && (e - s) % (24 * 60 * 60 * 1000) === 0;
-    } catch {
-      return false;
-    }
-  }
-
-  // Neues Event durch Auswahl anlegen
-  async function handleSelect(selectionInfo) {
-    // Wenn im Monatsraster ausgewählt wurde, wechsel am besten in die Wochenansicht, um Uhrzeiten zu setzen
-    let title = window.prompt("Titel für den Termin?");
+  // Auswahl: Termin anlegen (inkl. Uhrzeit in Week/Day-View)
+  const handleSelect = useCallback(async (selectionInfo) => {
+    const title = window.prompt("Titel für den Termin?");
     if (!title) {
       selectionInfo.view.calendar.unselect();
       return;
     }
 
-    // User-ID für created_by
     const { data: userData } = await supabase.auth.getUser();
     const createdBy = userData?.user?.id || null;
 
-    // FullCalendar liefert bereits start/end mit Uhrzeit in timeGrid-Views.
     const payload = {
       title,
       starts_at: selectionInfo.startStr,
@@ -103,9 +89,12 @@ export default function CalendarComponent() {
       created_by: createdBy,
     };
 
-    const { data, error } = await supabase.from("events").insert(payload).select(`
-      id, title, starts_at, ends_at, location, description, created_by, profiles (display_name)
-    `);
+    const { data, error } = await supabase
+      .from("events")
+      .insert(payload)
+      .select(`
+        id, title, starts_at, ends_at, location, description, created_by, profiles (display_name)
+      `);
 
     if (error) {
       console.error("Fehler beim Anlegen:", error);
@@ -127,11 +116,12 @@ export default function CalendarComponent() {
         display_name: ev.profiles?.display_name || "Unbekannt",
       },
     });
-    selectionInfo.view.calendar.unselect();
-  }
 
-  // Event per Drag/Resize aktualisieren (Start/Ende -> Supabase)
-  async function handleEventChange(changeInfo) {
+    selectionInfo.view.calendar.unselect();
+  }, [getUserColor]);
+
+  // Drag/Resize speichern
+  const handleEventChange = useCallback(async (changeInfo) => {
     const ev = changeInfo.event;
     const { error } = await supabase
       .from("events")
@@ -146,10 +136,11 @@ export default function CalendarComponent() {
       alert("Konnte Änderung nicht speichern. Rückgängig gemacht.");
       changeInfo.revert();
     }
-  }
+  }, []);
 
-  // Klick: Details anzeigen + löschen anbieten
-  async function handleEventClick(clickInfo) {
+  // Klick: Details + Löschen
+  const handleEventClick = useCallback(async (clickInfo) => {
+    console.log("eventClick", clickInfo.event?.id); // Debug
     const ev = clickInfo.event;
     const details =
       `Titel: ${ev.title}\n` +
@@ -158,7 +149,7 @@ export default function CalendarComponent() {
       `Ort:   ${ev.extendedProps.location || "—"}\n` +
       `Beschreibung: ${ev.extendedProps.description || "—"}\n` +
       `Erstellt von: ${ev.extendedProps.display_name}\n\n` +
-      `Löschen? (OK = löschen, Abbrechen = nur schließen)`;
+      `Löschen? (OK = löschen, Abbrechen = schließen)`;
 
     if (window.confirm(details)) {
       const { error } = await supabase.from("events").delete().eq("id", ev.id);
@@ -167,9 +158,9 @@ export default function CalendarComponent() {
         alert("Konnte Termin nicht löschen.");
         return;
       }
-      ev.remove(); // direkt aus dem Kalender entfernen
+      ev.remove();
     }
-  }
+  }, []);
 
   return (
     <div>
@@ -191,7 +182,6 @@ export default function CalendarComponent() {
         eventDrop={handleEventChange}
         eventResize={handleEventChange}
         eventClick={handleEventClick}
-        // Optional: bessere Darstellung beim Drag/Resize
         slotMinTime="06:00:00"
         slotMaxTime="22:00:00"
         nowIndicator
@@ -200,10 +190,5 @@ export default function CalendarComponent() {
 
       {loading && <p className="text-sm text-gray-500 mt-2">Lade Termine…</p>}
     </div>
-  );
-}
-        );
-      }}
-    />
   );
 }
