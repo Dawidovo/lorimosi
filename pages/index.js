@@ -1,4 +1,3 @@
-// pages/index.js - Korrekte vollständige Version
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Calendar } from '@fullcalendar/core';
@@ -6,16 +5,14 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-// Farben für die beiden Nutzer
 const userColors = {
-  'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': '#ef5350', // Rot
-  '88a63a7f-b350-4704-9b1e-44445a6f33bb': '#4cafef'  // Blau
+  'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': '#ff4f00',
+  '88a63a7f-b350-4704-9b1e-44445a6f33bb': '#4cafef'
 };
 
-// Namen für die Nutzer (optional, für interne Referenz)
 const userNames = {
-  'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': 'Du',
-  '88a63a7f-b350-4704-9b1e-44445a6f33bb': 'Freundin'
+  'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': 'Mosi',
+  '88a63a7f-b350-4704-9b1e-44445a6f33bb': 'Lori'
 };
 
 export default function Home() {
@@ -24,12 +21,10 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [events, setEvents] = useState([]);
 
-  // Session laden
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
-        // Simple Login-Prompt
         const email = prompt('E-Mail:');
         const password = prompt('Passwort:');
         if (!email || !password) return;
@@ -44,7 +39,6 @@ export default function Home() {
     })();
   }, []);
 
-  // Events laden
   async function loadEvents() {
     try {
       const { data, error } = await supabase
@@ -63,13 +57,11 @@ export default function Home() {
     }
   }
 
-  // Hilfsfunktion: Prüfung ob Ganztag-Event
   function isAllDayEvent(startStr, endStr) {
     if (!startStr || !endStr) return false;
     try {
       const start = new Date(startStr);
       const end = new Date(endStr);
-      // Ganztag wenn beide Zeiten Mitternacht sind und mindestens 24h Unterschied
       return start.getHours() === 0 && start.getMinutes() === 0 && 
              end.getHours() === 0 && end.getMinutes() === 0 &&
              (end - start) >= 24 * 60 * 60 * 1000;
@@ -78,7 +70,6 @@ export default function Home() {
     }
   }
 
-  // Kalender initialisieren und Events laden
   useEffect(() => {
     if (!user) return;
 
@@ -87,7 +78,7 @@ export default function Home() {
     if (hostRef.current && !calRef.current) {
       const calendar = new Calendar(hostRef.current, {
         plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-        initialView: 'dayGridMonth',
+        initialView: 'timeGridWeek',
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
@@ -104,10 +95,9 @@ export default function Home() {
         height: 'auto',
         locale: 'de',
 
-        // Events bereitstellen
         events: events.map(e => ({
           id: e.id,
-          title: e.title, // Nur Titel, keine E-Mail-Adresse
+          title: e.title,
           start: e.starts_at,
           end: e.ends_at,
           allDay: e.all_day || isAllDayEvent(e.starts_at, e.ends_at),
@@ -120,7 +110,6 @@ export default function Home() {
           }
         })),
 
-        // Neuen Termin erstellen
         select: async (info) => {
           const title = prompt('Titel des Termins:');
           if (!title) {
@@ -132,54 +121,49 @@ export default function Home() {
           let endsAt = info.endStr;
           let isAllDay = info.allDay;
 
-          // Wenn nicht Ganztag, Uhrzeiten abfragen
-          if (!info.allDay) {
-            const useSpecificTime = confirm('Möchten Sie eine spezielle Uhrzeit festlegen?\n\nOK = Uhrzeit eingeben\nAbbrechen = Ganztägiger Termin');
-            
-            if (useSpecificTime) {
-              const startTime = prompt('Startzeit (Format: HH:MM, z.B. 14:30):', '09:00');
-              if (startTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(startTime)) {
-                const endTime = prompt('Endzeit (Format: HH:MM, z.B. 16:00):', '10:00');
-                if (endTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(endTime)) {
-                  // Datum vom info.start nehmen und Zeit hinzufügen
-                  const startDate = new Date(info.start);
-                  const endDate = new Date(info.end || info.start);
-                  
-                  const [startHour, startMin] = startTime.split(':');
-                  const [endHour, endMin] = endTime.split(':');
-                  
-                  startDate.setHours(parseInt(startHour), parseInt(startMin), 0, 0);
-                  endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
-                  
-                  // Wenn Endzeit vor Startzeit, dann nächster Tag
-                  if (endDate <= startDate) {
-                    endDate.setDate(endDate.getDate() + 1);
-                  }
-                  
-                  startsAt = startDate.toISOString();
-                  endsAt = endDate.toISOString();
-                  isAllDay = false;
-                } else {
-                  alert('Ungültige Endzeit. Termin wird als ganztägig angelegt.');
-                  isAllDay = true;
+          // Immer Uhrzeit-Option anbieten, egal welche Ansicht
+          const useSpecificTime = confirm('Möchten Sie eine spezielle Uhrzeit festlegen?\n\nOK = Uhrzeit eingeben\nAbbrechen = Ganztägiger Termin');
+          
+          if (useSpecificTime) {
+            const startTime = prompt('Startzeit (Format: HH:MM, z.B. 14:30):', '09:00');
+            if (startTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(startTime)) {
+              const endTime = prompt('Endzeit (Format: HH:MM, z.B. 16:00):', '10:00');
+              if (endTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(endTime)) {
+                const startDate = new Date(info.start);
+                const endDate = new Date(info.end || info.start);
+                
+                const [startHour, startMin] = startTime.split(':');
+                const [endHour, endMin] = endTime.split(':');
+                
+                startDate.setHours(parseInt(startHour), parseInt(startMin), 0, 0);
+                endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
+                
+                if (endDate <= startDate) {
+                  endDate.setDate(endDate.getDate() + 1);
                 }
+                
+                startsAt = startDate.toISOString();
+                endsAt = endDate.toISOString();
+                isAllDay = false;
               } else {
-                alert('Ungültige Startzeit. Termin wird als ganztägig angelegt.');
+                alert('Ungültige Endzeit. Termin wird als ganztägig angelegt.');
                 isAllDay = true;
               }
             } else {
+              alert('Ungültige Startzeit. Termin wird als ganztägig angelegt.');
               isAllDay = true;
             }
+          } else {
+            isAllDay = true;
           }
 
-          // Optionale Zusatzinfos
           const location = prompt('Ort (optional):') || null;
           const description = prompt('Beschreibung (optional):') || null;
 
           try {
             const { data, error } = await supabase.from('events').insert({
               owner: user.id,
-              owner_name: user.email.split('@')[0], // Nur Name vor @
+              owner_name: user.email.split('@')[0],
               title,
               location,
               description,
@@ -194,7 +178,6 @@ export default function Home() {
               return;
             }
 
-            // Event zum Kalender hinzufügen ohne Neuladen
             const newEvent = data[0];
             calendar.addEvent({
               id: newEvent.id,
@@ -219,7 +202,6 @@ export default function Home() {
           info.view.calendar.unselect();
         },
 
-        // Event verschieben
         eventDrop: async (info) => {
           try {
             const { error } = await supabase
@@ -242,7 +224,6 @@ export default function Home() {
           }
         },
 
-        // Event Größe ändern
         eventResize: async (info) => {
           try {
             const { error } = await supabase
@@ -264,12 +245,10 @@ export default function Home() {
           }
         },
 
-        // Event anklicken - Details anzeigen und löschen
         eventClick: async (info) => {
           const event = info.event;
           const props = event.extendedProps;
           
-          // Details zusammenstellen
           const startTime = event.start ? event.start.toLocaleString('de-DE') : 'Unbekannt';
           const endTime = event.end ? event.end.toLocaleString('de-DE') : 'Unbekannt';
           const ownerName = userNames[props.owner] || props.owner_name || 'Unbekannt';
@@ -295,7 +274,6 @@ export default function Home() {
                 return;
               }
 
-              // Event aus Kalender entfernen
               event.remove();
               
             } catch (err) {
@@ -311,10 +289,8 @@ export default function Home() {
     }
   }, [user]);
 
-  // Events aktualisieren wenn sich die Daten ändern
   useEffect(() => {
     if (calRef.current && events.length >= 0) {
-      // Alle Event-Sources entfernen und neu hinzufügen
       calRef.current.removeAllEventSources();
       calRef.current.addEventSource(events.map(e => ({
         id: e.id,
@@ -337,7 +313,7 @@ export default function Home() {
     return (
       <main style={{ padding: 20, textAlign: 'center' }}>
         <h2>Lade Kalender...</h2>
-        <p>Bitte warten Sie einen Moment.</p>
+        <p>Bitte warte einen Moment.</p>
       </main>
     );
   }
@@ -353,14 +329,14 @@ export default function Home() {
         borderBottom: '2px solid #eee'
       }}>
         <div>
-          <h1 style={{ margin: 0, color: '#333' }}>💕 Unser gemeinsamer Kalender</h1>
+          <h1 style={{ margin: 0, color: '#333' }}>💕 Our future plans 💕</h1>
           <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
             Angemeldet als: {user.email}
           </p>
         </div>
         <button 
           onClick={async () => { 
-            if (confirm('Möchten Sie sich wirklich abmelden?')) {
+            if (confirm('You really sure you want to logout my love?? <3')) {
               await supabase.auth.signOut(); 
               location.reload(); 
             }
