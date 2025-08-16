@@ -510,3 +510,20 @@ export default function Home() {
               }
             }}
             style={{
+              padding: '6px 12px',
+              backgroundColor: '#ef5350',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      </header>
+      <div ref={hostRef} style={{ backgroundColor: 'var(--calendar-bg)', borderRadius: '6px', boxShadow: 'var(--shadow)' }} />
+    </main>
+  );
+}
