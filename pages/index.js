@@ -484,6 +484,23 @@ export default function Home() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
           
+          <Link href="/hq" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '6px 10px',
+            backgroundColor: '#8b5cf6',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '4px',
+            fontSize: '12px',
+            transition: 'all 0.2s ease',
+            fontWeight: '500'
+          }}>
+            <span>🏢</span>
+            <span>HQ</span>
+          </Link>
+          
           <Link href="/todo" style={{
             display: 'flex',
             alignItems: 'center',
