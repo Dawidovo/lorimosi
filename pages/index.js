@@ -440,72 +440,64 @@ export default function Home() {
   return (
     <main style={{ padding: 0, maxWidth: '100%', margin: '0' }}>
       <header style={{
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: 15,
-  padding: '8px 0',
-  borderBottom: '1px solid #ddd'
-}}>
-  <div>
-    <h1 style={{ margin: 0, color: '#333', fontSize: '20px' }}>💕 Our future Plans</h1>
-    <div style={{ margin: '2px 0 0 0', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span style={{ color: '#666' }}>{user.email.split('@')[0]}</span>
-      <span style={{ color: userColors['fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc'] }}>●</span>
-      <span style={{ color: userColors['5a1d936f-6f39-4c2a-915b-bac53b6cf627'] }}>●</span>
-      <span style={{ color: userColors['together'] }}>●</span>
-    </div>
-  </div>
-  
-  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-    {/* Todo-Liste Button */}
-    <Link href="/todo" style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '4px',
-      padding: '6px 10px',
-      backgroundColor: '#f8f9fa',
-      color: '#666',
-      textDecoration: 'none',
-      borderRadius: '4px',
-      fontSize: '12px',
-      border: '1px solid #e9ecef',
-      transition: 'all 0.2s ease',
-      fontWeight: '500'
-    }}
-    onMouseEnter={(e) => {
-      e.target.style.backgroundColor = '#e9ecef';
-      e.target.style.color = '#495057';
-      e.target.style.transform = 'translateY(-1px)';
-    }}
-    onMouseLeave={(e) => {
-      e.target.style.backgroundColor = '#f8f9fa';
-      e.target.style.color = '#666';
-      e.target.style.transform = 'translateY(0)';
-    }}>
-      <span>📝</span>
-      <span>Todos</span>
-    </Link>
-    
-    {/* Logout Button */}
-    <button 
-      onClick={async () => { 
-        if (confirm('You really wanna log out Süße?? <3')) {
-          await supabase.auth.signOut(); 
-          location.reload(); 
-        }
-      }}
-      style={{
-        padding: '6px 12px',
-        backgroundColor: '#ef5350',
-        color: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontSize: '12px'
-      }}
-    >
-      Logout
-    </button>
-  </div>
-</header>
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+        padding: '8px 0',
+        borderBottom: '1px solid #ddd'
+      }}>
+        <div>
+          <h1 style={{ margin: 0, color: '#333', fontSize: '20px' }}>💕 Our future Plans</h1>
+          <div style={{ margin: '2px 0 0 0', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#666' }}>{user.email.split('@')[0]}</span>
+            <span style={{ color: userColors['fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc'] }}>●</span>
+            <span style={{ color: userColors['5a1d936f-6f39-4c2a-915b-bac53b6cf627'] }}>●</span>
+            <span style={{ color: userColors['together'] }}>●</span>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link href="/todo" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '6px 10px',
+            backgroundColor: '#f8f9fa',
+            color: '#666',
+            textDecoration: 'none',
+            borderRadius: '4px',
+            fontSize: '12px',
+            border: '1px solid #e9ecef',
+            transition: 'all 0.2s ease',
+            fontWeight: '500'
+          }}>
+            <span>📝</span>
+            <span>Todos</span>
+          </Link>
+          
+          <button 
+            onClick={async () => { 
+              if (confirm('You really wanna log out Süße?? <3')) {
+                await supabase.auth.signOut(); 
+                location.reload(); 
+              }
+            }}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: '#ef5350',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      </header>
+      <div ref={hostRef} style={{ backgroundColor: 'white', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }} />
+    </main>
+  );
+}
