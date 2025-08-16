@@ -20,14 +20,46 @@ export default function App({ Component, pageProps }) {
       </Head>
       
       <style jsx global>{`
+        :root {
+          /* Light Theme */
+          --bg-primary: #f8f9fa;
+          --bg-secondary: #ffffff;
+          --text-primary: #333333;
+          --text-secondary: #666666;
+          --border-color: #ddd;
+          --shadow: 0 1px 3px rgba(0,0,0,0.1);
+          --shadow-hover: 0 2px 8px rgba(0,0,0,0.1);
+          --calendar-bg: #ffffff;
+          --header-bg: #ffffff;
+          --input-bg: #ffffff;
+          --input-border: #f0f0f0;
+        }
+
+        [data-theme="dark"] {
+          /* Dark Theme */
+          --bg-primary: #1a1a1a;
+          --bg-secondary: #2d2d2d;
+          --text-primary: #ffffff;
+          --text-secondary: #cccccc;
+          --border-color: #404040;
+          --shadow: 0 1px 3px rgba(0,0,0,0.3);
+          --shadow-hover: 0 2px 8px rgba(0,0,0,0.4);
+          --calendar-bg: #2d2d2d;
+          --header-bg: #2d2d2d;
+          --input-bg: #404040;
+          --input-border: #555555;
+        }
+
         * {
           box-sizing: border-box;
+          transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
         
         body {
           margin: 0;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background-color: #f8f9fa;
+          background-color: var(--bg-primary);
+          color: var(--text-primary);
           padding: 8px;
         }
         
@@ -38,9 +70,9 @@ export default function App({ Component, pageProps }) {
         .fc-header-toolbar {
           margin-bottom: 0.5em !important;
           padding: 8px 12px;
-          background-color: #ffffff;
+          background-color: var(--header-bg) !important;
           border-radius: 6px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          box-shadow: var(--shadow);
           flex-wrap: wrap;
         }
         
@@ -72,6 +104,7 @@ export default function App({ Component, pageProps }) {
           font-size: 16px !important;
           font-weight: 600 !important;
           margin: 0 8px !important;
+          color: var(--text-primary) !important;
         }
         
         .fc-event {
@@ -102,6 +135,8 @@ export default function App({ Component, pageProps }) {
           font-weight: 600 !important;
           cursor: pointer !important;
           transition: background-color 0.2s ease !important;
+          background-color: var(--header-bg) !important;
+          color: var(--text-primary) !important;
         }
         
         .fc-col-header-cell:hover {
@@ -111,16 +146,41 @@ export default function App({ Component, pageProps }) {
         .fc-daygrid-day-number {
           padding: 4px !important;
           font-size: 13px !important;
+          color: var(--text-primary) !important;
         }
         
         .fc-timegrid-slot-label {
           font-size: 10px !important;
           padding: 2px 4px !important;
+          color: var(--text-secondary) !important;
         }
         
         .fc-timegrid-event {
           border-radius: 3px !important;
           margin: 1px !important;
+        }
+
+        /* Calendar Day Background */
+        .fc-daygrid-day,
+        .fc-timegrid-col {
+          background-color: var(--calendar-bg) !important;
+        }
+
+        .fc-scrollgrid {
+          background-color: var(--calendar-bg) !important;
+        }
+
+        .fc-theme-standard td,
+        .fc-theme-standard th {
+          border-color: var(--border-color) !important;
+        }
+
+        .fc-timegrid-divider {
+          background-color: var(--border-color) !important;
+        }
+
+        .fc-now-indicator-line {
+          border-color: #4cafef !important;
         }
         
         /* Mobile-spezifische Anpassungen */
