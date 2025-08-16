@@ -96,11 +96,17 @@ export default function Home() {
           timeGridWeek: {
             type: 'timeGrid',
             duration: { days: 7 },
-            buttonText: 'Woche'
+            buttonText: 'Week'
+          },
+          timeGridDay: {
+            buttonText: 'Day'
+          },
+          dayGridMonth: {
+            buttonText: 'Month'
           }
         },
         headerToolbar: {
-          left: 'prev,next today',
+          left: 'prev,next',
           center: 'title',
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
@@ -339,52 +345,42 @@ export default function Home() {
   }
 
   return (
-    <main style={{ padding: 16, maxWidth: '1200px', margin: '0 auto' }}>
+    <main style={{ padding: 0, maxWidth: '100%', margin: '0' }}>
       <header style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
-        padding: '10px 0',
-        borderBottom: '2px solid #eee'
+        marginBottom: 15,
+        padding: '8px 0',
+        borderBottom: '1px solid #ddd'
       }}>
         <div>
-          <h1 style={{ margin: 0, color: '#333' }}>💕 Our future Plans 💕</h1>
-          <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
-            Angemeldet als: {user.email}
+          <h1 style={{ margin: 0, color: '#333', fontSize: '20px' }}>💕 Our Plans</h1>
+          <p style={{ margin: '2px 0 0 0', color: '#666', fontSize: '12px' }}>
+            {user.email.split('@')[0]}
           </p>
         </div>
         <button 
           onClick={async () => { 
-            if (confirm('Möchten du dich wirklich abmelden my Love? <3')) {
+            if (confirm('Logout?')) {
               await supabase.auth.signOut(); 
               location.reload(); 
             }
           }}
           style={{
-            padding: '8px 16px',
+            padding: '6px 12px',
             backgroundColor: '#ef5350',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            fontSize: '12px'
           }}
         >
           Logout
         </button>
       </header>
-      
-      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-        <h3 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>💡 Bedienungshilfe:</h3>
-        <ul style={{ margin: 0, fontSize: '14px', color: '#555' }}>
-          <li><strong>Neuer Termin:</strong> Klicken und ziehen Sie über den gewünschten Zeitraum</li>
-          <li><strong>Termin verschieben:</strong> Termin anklicken und ziehen</li>
-          <li><strong>Termin löschen:</strong> Auf den Termin klicken, dann bestätigen</li>
-          <li><strong>Farbkodierung:</strong> <span style={{color: userColors['fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc']}}>●</span> Orange = Mosi | <span style={{color: userColors['88a63a7f-b350-4704-9b1e-44445a6f33bb']}}>●</span> Blau = Lori</li>
-        </ul>
-      </div>
-
-      <div ref={hostRef} style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }} />
+      <div ref={hostRef} style={{ backgroundColor: 'white', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }} />
     </main>
   );
 }
