@@ -1,4 +1,4 @@
-// pages/index.js - Verbesserte Version
+// pages/index.js - Korrekte vollständige Version
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Calendar } from '@fullcalendar/core';
@@ -391,6 +391,7 @@ export default function Home() {
       <div ref={hostRef} style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }} />
     </main>
   );
+}
 }
       </header>
       <div ref={hostRef} />
