@@ -131,11 +131,12 @@ export default function Home() {
           start: e.starts_at,
           end: e.ends_at,
           allDay: e.all_day || isAllDayEvent(e.starts_at, e.ends_at),
-          backgroundColor: userColors[e.owner] || '#9E9E9E',
+          backgroundColor: e.is_together ? userColors['together'] : userColors[e.owner] || '#9E9E9E',
           extendedProps: {
             location: e.location,
             owner: e.owner,
-            owner_name: e.owner_name
+            owner_name: e.owner_name,
+            is_together: e.is_together
           }
         })),
 
@@ -215,13 +216,14 @@ export default function Home() {
 
           try {
             const { data, error } = await supabase.from('events').insert({
-              owner: isTogetherEvent ? 'together' : user.id,
-              owner_name: isTogetherEvent ? 'Together ❤️' : user.email.split('@')[0],
+              owner: user.id,
+              owner_name: user.email.split('@')[0],
               title,
               location,
               starts_at: startsAt,
               ends_at: endsAt,
-              all_day: isAllDay
+              all_day: isAllDay,
+              is_together: isTogetherEvent
             }).select();
 
             if (error) {
@@ -237,11 +239,12 @@ export default function Home() {
               start: newEvent.starts_at,
               end: newEvent.ends_at,
               allDay: newEvent.all_day,
-              backgroundColor: userColors[newEvent.owner] || '#9E9E9E',
+              backgroundColor: newEvent.is_together ? userColors['together'] : userColors[newEvent.owner] || '#9E9E9E',
               extendedProps: {
                 location: newEvent.location,
                 owner: newEvent.owner,
-                owner_name: newEvent.owner_name
+                owner_name: newEvent.owner_name,
+                is_together: newEvent.is_together
               }
             });
 
@@ -302,7 +305,7 @@ export default function Home() {
           
           const startTime = event.start ? event.start.toLocaleDateString('de-DE') : 'Unbekannt';
           const endTime = event.end ? new Date(event.end.getTime() - 1).toLocaleDateString('de-DE') : 'Unbekannt';
-          const ownerName = userNames[props.owner] || props.owner_name || 'Unbekannt';
+          const ownerName = props.is_together ? 'Together ❤️' : (userNames[props.owner] || props.owner_name || 'Unbekannt');
           
           // Prüfe ob mehrtägig
           const isMultiDay = event.start && event.end && 
@@ -368,11 +371,12 @@ export default function Home() {
         start: e.starts_at,
         end: e.ends_at,
         allDay: e.all_day || isAllDayEvent(e.starts_at, e.ends_at),
-        backgroundColor: userColors[e.owner] || '#9E9E9E',
+        backgroundColor: e.is_together ? userColors['together'] : userColors[e.owner] || '#9E9E9E',
         extendedProps: {
           location: e.location,
           owner: e.owner,
-          owner_name: e.owner_name
+          owner_name: e.owner_name,
+          is_together: e.is_together
         }
       })));
     }
@@ -398,7 +402,7 @@ export default function Home() {
         borderBottom: '1px solid #ddd'
       }}>
         <div>
-          <h1 style={{ margin: 0, color: '#333', fontSize: '20px' }}>💕 Our future Plans 💕</h1>
+          <h1 style={{ margin: 0, color: '#333', fontSize: '20px' }}>💕 Our Plans</h1>
           <div style={{ margin: '2px 0 0 0', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ color: '#666' }}>{user.email.split('@')[0]}</span>
             <span style={{ color: userColors['fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc'] }}>●</span>
