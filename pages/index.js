@@ -60,9 +60,13 @@ export default function Home() {
   function goToOptimalWeek() {
     if (calRef.current) {
       const today = new Date();
+      const todayDayOfWeek = today.getDay(); // 0=Sonntag, 1=Montag, ...
       
-      // Wechsle zur "futureWeek" View für optimale Zukunftsplanung
-      calRef.current.changeView('futureWeek', today);
+      // Setze heute als ersten Tag der Woche
+      calRef.current.setOption('firstDay', todayDayOfWeek);
+      
+      // Gehe zu heute
+      calRef.current.gotoDate(today);
     }
   }
 
@@ -87,36 +91,20 @@ export default function Home() {
     if (hostRef.current && !calRef.current) {
       const calendar = new Calendar(hostRef.current, {
         plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-        initialView: 'futureWeek',
+        initialView: 'timeGridWeek',
         views: {
           timeGridWeek: {
             type: 'timeGrid',
             duration: { days: 7 },
-            buttonText: 'Woche',
-            slotLabelFormat: {
-              hour: '2-digit',
-              minute: '2-digit',
-              omitZeroMinute: false,
-              meridiem: 'short'
-            }
-          },
-          futureWeek: {
-            type: 'timeGrid', 
-            duration: { days: 7 },
-            buttonText: 'Zukunft',
-            validRange: function(nowDate) {
-              return {
-                start: nowDate
-              };
-            }
+            buttonText: 'Woche'
           }
         },
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,timeGridWeek,futureWeek,timeGridDay'
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        firstDay: 1, // Montag als Standard, aber wird überschrieben
+        firstDay: 0, // Dynamisch setzen - heute als erster Tag
         dayHeaderFormat: { weekday: 'short', day: 'numeric' },
         selectable: true,
         selectMirror: true,
@@ -315,6 +303,7 @@ export default function Home() {
       calendar.render();
       calRef.current = calendar;
       
+        // Direkt nach dem Rendern optimale Woche setzen
       setTimeout(() => {
         goToOptimalWeek();
       }, 100);
@@ -391,7 +380,7 @@ export default function Home() {
           <li><strong>Neuer Termin:</strong> Klicken und ziehen Sie über den gewünschten Zeitraum</li>
           <li><strong>Termin verschieben:</strong> Termin anklicken und ziehen</li>
           <li><strong>Termin löschen:</strong> Auf den Termin klicken, dann bestätigen</li>
-          <li><strong>Farbkodierung:</strong> <span style={{color: userColors['fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc']}}>●</span> Rot = Ein Partner | <span style={{color: userColors['88a63a7f-b350-4704-9b1e-44445a6f33bb']}}>●</span> Blau = Anderer Partner</li>
+          <li><strong>Farbkodierung:</strong> <span style={{color: userColors['fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc']}}>●</span> Orange = Mosi | <span style={{color: userColors['88a63a7f-b350-4704-9b1e-44445a6f33bb']}}>●</span> Blau = Lori</li>
         </ul>
       </div>
 
