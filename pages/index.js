@@ -402,7 +402,7 @@ export default function Home() {
         borderBottom: '1px solid #ddd'
       }}>
         <div>
-          <h1 style={{ margin: 0, color: '#333', fontSize: '20px' }}>💕 Our Plans</h1>
+          <h1 style={{ margin: 0, color: '#333', fontSize: '20px' }}>💕 Our future Plans</h1>
           <div style={{ margin: '2px 0 0 0', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ color: '#666' }}>{user.email.split('@')[0]}</span>
             <span style={{ color: userColors['fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc'] }}>●</span>
@@ -412,7 +412,7 @@ export default function Home() {
         </div>
         <button 
           onClick={async () => { 
-            if (confirm('Logout?')) {
+            if (confirm('You really wanna log out Süße?? <3')) {
               await supabase.auth.signOut(); 
               location.reload(); 
             }
