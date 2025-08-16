@@ -72,7 +72,45 @@ export default function Home() {
     }
   }
 
-  function isAllDayEvent(startStr, endStr) {
+  // Flexible Uhrzeitparserung
+  function parseTimeInput(input) {
+    if (!input) return null;
+    
+    // Entferne Leerzeichen und mache alles lowercase
+    input = input.trim().toLowerCase();
+    
+    // Wenn bereits im HH:MM Format
+    if (/^\d{1,2}:\d{2}$/.test(input)) {
+      const [hours, minutes] = input.split(':');
+      const h = parseInt(hours);
+      const m = parseInt(minutes);
+      if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+      }
+    }
+    
+    // Nur Zahlen ohne Doppelpunkt
+    if (/^\d{1,4}$/.test(input)) {
+      const num = input.padStart(4, '0'); // z.B. "15" -> "0015", "1530" -> "1530"
+      
+      if (input.length <= 2) {
+        // 1-2 Ziffern = nur Stunden (z.B. "15" -> "15:00", "3" -> "03:00")
+        const hours = parseInt(input);
+        if (hours >= 0 && hours <= 23) {
+          return `${hours.toString().padStart(2, '0')}:00`;
+        }
+      } else {
+        // 3-4 Ziffern = HHMM (z.B. "1530" -> "15:30", "330" -> "03:30")
+        const hours = parseInt(num.substring(0, 2));
+        const minutes = parseInt(num.substring(2, 4));
+        if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+          return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+      }
+    }
+    
+    return null;
+  }
     if (!startStr || !endStr) return false;
     try {
       const start = new Date(startStr);
@@ -157,12 +195,12 @@ export default function Home() {
           let endsAt = info.endStr;
           let isAllDay = info.allDay;
 
-          // Prüfe ob mehrtägige Auswahl (nur in Monatsansicht möglich)
-          const isMultiDay = info.start && info.end && 
-                            (info.end.getTime() - info.start.getTime()) > 24 * 60 * 60 * 1000;
+          // Prüfe ob WIRKLICH mehrtägige Auswahl oder nur FullCalendar-Artefakt
+          const daysDifference = Math.ceil((info.end.getTime() - info.start.getTime()) / (24 * 60 * 60 * 1000));
+          const isMultiDay = daysDifference > 1 && info.view.type === 'dayGridMonth';
 
           if (isMultiDay) {
-            // Mehrtägiger Termin (z.B. Urlaub)
+            // Mehrtägiger Termin (z.B. Urlaub) - nur in Monatsansicht
             const confirmMultiDay = confirm(`Mehrtägiger Termin "${title}" vom ${info.start.toLocaleDateString('de-DE')} bis ${new Date(info.end.getTime() - 1).toLocaleDateString('de-DE')}?\n\nOK = Mehrtägig\nAbbrechen = Nur einen Tag`);
             
             if (confirmMultiDay) {
@@ -182,19 +220,24 @@ export default function Home() {
             const useSpecificTime = confirm('Möchten Sie eine spezielle Uhrzeit festlegen?\n\nOK = Uhrzeit eingeben\nAbbrechen = Ganztägiger Termin');
             
             if (useSpecificTime) {
-              const startTime = prompt('Startzeit (Format: HH:MM, z.B. 14:30):', '09:00');
-              if (startTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(startTime)) {
-                const endTime = prompt('Endzeit (Format: HH:MM, z.B. 16:00):', '10:00');
-                if (endTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(endTime)) {
+              const startTimeInput = prompt('Startzeit (z.B. 15:30, 1530, 15):', '9');
+              const parsedStartTime = parseTimeInput(startTimeInput);
+              
+              if (parsedStartTime) {
+                const endTimeInput = prompt('Endzeit (z.B. 17:00, 1700, 17):', '10');
+                const parsedEndTime = parseTimeInput(endTimeInput);
+                
+                if (parsedEndTime) {
                   const startDate = new Date(info.start);
-                  const endDate = new Date(info.end || info.start);
+                  const endDate = new Date(info.start); // Verwende info.start für beide, nicht info.end
                   
-                  const [startHour, startMin] = startTime.split(':');
-                  const [endHour, endMin] = endTime.split(':');
+                  const [startHour, startMin] = parsedStartTime.split(':');
+                  const [endHour, endMin] = parsedEndTime.split(':');
                   
                   startDate.setHours(parseInt(startHour), parseInt(startMin), 0, 0);
                   endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
                   
+                  // Wenn Endzeit vor Startzeit, dann nächster Tag
                   if (endDate <= startDate) {
                     endDate.setDate(endDate.getDate() + 1);
                   }
@@ -205,13 +248,25 @@ export default function Home() {
                 } else {
                   alert('Ungültige Endzeit. Termin wird als ganztägig angelegt.');
                   isAllDay = true;
+                  // Stelle sicher, dass Ende am selben Tag ist
+                  const endOfDay = new Date(info.start);
+                  endOfDay.setDate(endOfDay.getDate() + 1);
+                  endsAt = endOfDay.toISOString().split('T')[0];
                 }
               } else {
                 alert('Ungültige Startzeit. Termin wird als ganztägig angelegt.');
                 isAllDay = true;
+                // Stelle sicher, dass Ende am selben Tag ist
+                const endOfDay = new Date(info.start);
+                endOfDay.setDate(endOfDay.getDate() + 1);
+                endsAt = endOfDay.toISOString().split('T')[0];
               }
             } else {
               isAllDay = true;
+              // Stelle sicher, dass Ende am selben Tag ist für Ganztag-Events
+              const endOfDay = new Date(info.start);
+              endOfDay.setDate(endOfDay.getDate() + 1);
+              endsAt = endOfDay.toISOString().split('T')[0];
             }
           }
 
