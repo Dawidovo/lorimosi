@@ -369,4 +369,144 @@ export default function Home() {
           const ownerName = props.is_together ? 'Together ❤️' : (userNames[props.owner] || props.owner_name || 'Unbekannt');
           
           const isMultiDay = event.start && event.end && 
-                            (event.end.getTime() - event.start.getTime()) > 24 * 60
+                            (event.end.getTime() - event.start.getTime()) > 24 * 60 * 60 * 1000;
+          
+          let details = `📅 ${event.title}\n\n`;
+          
+          if (isMultiDay) {
+            details += `📆 Von: ${startTime}\n`;
+            details += `📆 Bis: ${endTime}\n`;
+            const days = Math.ceil((event.end.getTime() - event.start.getTime()) / (24 * 60 * 60 * 1000));
+            details += `⏱️ Dauer: ${days} Tag${days > 1 ? 'e' : ''}\n`;
+          } else {
+            const startTimeFormatted = event.start ? event.start.toLocaleString('de-DE') : 'Unbekannt';
+            const endTimeFormatted = event.end ? event.end.toLocaleString('de-DE') : 'Unbekannt';
+            details += `🕐 Von: ${startTimeFormatted}\n`;
+            details += `🕐 Bis: ${endTimeFormatted}\n`;
+          }
+          
+          if (props.location) details += `📍 Ort: ${props.location}\n`;
+          details += `👤 Erstellt von: ${ownerName}\n\n`;
+          details += `Möchten Sie diesen Termin löschen?`;
+
+          if (confirm(details)) {
+            try {
+              const { error } = await supabase
+                .from('events')
+                .delete()
+                .eq('id', event.id);
+
+              if (error) {
+                console.error('Fehler beim Löschen:', error);
+                alert('Fehler beim Löschen: ' + error.message);
+                return;
+              }
+
+              event.remove();
+              
+            } catch (err) {
+              console.error('Unerwarteter Fehler:', err);
+              alert('Ein unerwarteter Fehler ist aufgetreten.');
+            }
+          }
+        }
+      });
+
+      calendar.render();
+      calRef.current = calendar;
+      
+      setTimeout(() => {
+        const dayHeaders = document.querySelectorAll('.fc-col-header-cell');
+        dayHeaders.forEach(header => {
+          header.style.cursor = 'pointer';
+          header.addEventListener('click', (e) => {
+            const dateStr = header.getAttribute('data-date');
+            if (dateStr) {
+              calendar.changeView('timeGridDay', dateStr);
+            }
+          });
+        });
+        
+        goToOptimalWeek();
+      }, 100);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (calRef.current && events.length >= 0) {
+      calRef.current.removeAllEventSources();
+      calRef.current.addEventSource(events.map(e => ({
+        id: e.id,
+        title: e.title,
+        start: e.starts_at,
+        end: e.ends_at,
+        allDay: e.all_day || isAllDayEvent(e.starts_at, e.ends_at),
+        backgroundColor: e.is_together ? userColors['together'] : userColors[e.owner] || '#9E9E9E',
+        extendedProps: {
+          location: e.location,
+          owner: e.owner,
+          owner_name: e.owner_name,
+          is_together: e.is_together
+        }
+      })));
+    }
+  }, [events]);
+
+  if (!user) {
+    return (
+      <main style={{ padding: 20, textAlign: 'center', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', minHeight: '100vh' }}>
+        <h2>Lade Kalender...</h2>
+        <p>Bitte warten Sie einen Moment.</p>
+      </main>
+    );
+  }
+
+  return (
+    <main style={{ padding: 0, maxWidth: '100%', margin: '0' }}>
+      <header style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+        padding: '8px 0',
+        borderBottom: `1px solid var(--border-color)`
+      }}>
+        <div>
+          <h1 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '20px' }}>💕 Our future Plans</h1>
+          <div style={{ margin: '2px 0 0 0', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>{user.email.split('@')[0]}</span>
+            <span style={{ color: userColors['fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc'] }}>●</span>
+            <span style={{ color: userColors['5a1d936f-6f39-4c2a-915b-bac53b6cf627'] }}>●</span>
+            <span style={{ color: userColors['together'] }}>●</span>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
+          
+          <Link href="/todo" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '6px 10px',
+            backgroundColor: 'var(--bg-secondary)',
+            color: 'var(--text-secondary)',
+            textDecoration: 'none',
+            borderRadius: '4px',
+            fontSize: '12px',
+            border: `1px solid var(--border-color)`,
+            transition: 'all 0.2s ease',
+            fontWeight: '500'
+          }}>
+            <span>📝</span>
+            <span>Todos</span>
+          </Link>
+          
+          <button 
+            onClick={async () => { 
+              if (confirm('You really wanna log out Süße?? <3')) {
+                await supabase.auth.signOut(); 
+                location.reload(); 
+              }
+            }}
+            style={{
