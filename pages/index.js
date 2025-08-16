@@ -392,9 +392,3 @@ export default function Home() {
     </main>
   );
 }
-}
-      </header>
-      <div ref={hostRef} />
-    </main>
-  );
-}
