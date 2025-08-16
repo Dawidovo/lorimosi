@@ -164,7 +164,7 @@ export default function App({ Component, pageProps }) {
           background-color: var(--bg-secondary) !important;
         }
 
-        /* Event Styling - Farben bleiben auch im Dark Mode erhalten */
+        /* Event Styling - Intelligente Textfarben basierend auf Hintergrund */
         .fc-event {
           border-radius: 4px !important;
           border: none !important;
@@ -175,9 +175,7 @@ export default function App({ Component, pageProps }) {
           box-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
           transition: all 0.2s ease !important;
           font-weight: 500 !important;
-          /* Wichtig: Farben werden über JavaScript gesetzt und sollen erhalten bleiben */
-          color: white !important;
-          border: 1px solid rgba(255,255,255,0.2) !important;
+          border: 1px solid rgba(0,0,0,0.1) !important;
         }
         
         .fc-event:hover {
@@ -186,17 +184,17 @@ export default function App({ Component, pageProps }) {
           filter: brightness(1.1) !important;
         }
         
-        /* Event Text muss immer weiß und lesbar sein */
+        /* Event Text - Standard dunkle Schrift für besseren Kontrast */
         .fc-event .fc-event-title,
         .fc-event .fc-event-time,
         .fc-event-title-container,
         .fc-event-main {
-          color: white !important;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+          color: rgba(0,0,0,0.9) !important;
+          text-shadow: none !important;
           font-weight: 600 !important;
         }
         
-        /* Daygrid Events - größere, gut lesbare Events */
+        /* Daygrid Events - dunkle Schrift auf farbigem Hintergrund */
         .fc-daygrid-event {
           margin: 1px !important;
           border-radius: 3px !important;
@@ -204,13 +202,13 @@ export default function App({ Component, pageProps }) {
         }
         
         .fc-daygrid-event .fc-event-title {
-          color: white !important;
+          color: rgba(0,0,0,0.9) !important;
           font-weight: 600 !important;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+          text-shadow: none !important;
           font-size: 11px !important;
         }
         
-        /* Timegrid Events - Optimiert für schmale Zeitslots */
+        /* Timegrid Events - weiße Schrift für kleinere Events */
         .fc-timegrid-event {
           border-radius: 3px !important;
           margin: 1px !important;
@@ -279,7 +277,7 @@ export default function App({ Component, pageProps }) {
         [data-theme="dark"] .fc-event {
           /* Erhöhte Sichtbarkeit im Dark Mode */
           box-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
-          border: 1px solid rgba(255,255,255,0.3) !important;
+          border: 1px solid rgba(255,255,255,0.2) !important;
         }
         
         [data-theme="dark"] .fc-event:hover {
@@ -287,32 +285,24 @@ export default function App({ Component, pageProps }) {
           filter: brightness(1.2) !important;
         }
         
-        /* Text-Shadow für bessere Lesbarkeit im Dark Mode */
-        [data-theme="dark"] .fc-event .fc-event-title,
-        [data-theme="dark"] .fc-event .fc-event-time {
-          text-shadow: 0 2px 4px rgba(0,0,0,0.9) !important;
-          font-weight: 700 !important;
+        /* Dark Mode: Helle Schrift für Daygrid Events */
+        [data-theme="dark"] .fc-daygrid-event .fc-event-title,
+        [data-theme="dark"] .fc-daygrid-event .fc-event-time {
+          color: white !important;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.7) !important;
         }
 
-        /* Light Mode - weniger starker Schatten */
-        :root .fc-event .fc-event-title,
-        :root .fc-event .fc-event-time {
-          text-shadow: 0 1px 3px rgba(0,0,0,0.7) !important;
+        /* Light Mode: Dunkle Schrift für besseren Kontrast auf farbigen Events */
+        :root .fc-daygrid-event .fc-event-title,
+        :root .fc-daygrid-event .fc-event-time {
+          color: rgba(0,0,0,0.9) !important;
+          text-shadow: 0 1px 2px rgba(255,255,255,0.3) !important;
         }
 
-        /* Kontrast-Verbesserungen für alle Event-Farben */
-        .fc-event[style*="#ff4f00"] .fc-event-title,
-        .fc-event[style*="#ff4f00"] .fc-event-time {
-          text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
-        }
-        
-        .fc-event[style*="#00bfff"] .fc-event-title,
-        .fc-event[style*="#00bfff"] .fc-event-time {
-          text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
-        }
-        
-        .fc-event[style*="#8b5cf6"] .fc-event-title,
-        .fc-event[style*="#8b5cf6"] .fc-event-time {
+        /* Timegrid Events behalten weiße Schrift in beiden Modi */
+        .fc-timegrid-event .fc-event-title,
+        .fc-timegrid-event .fc-event-time {
+          color: white !important;
           text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
         }
 
@@ -348,15 +338,22 @@ export default function App({ Component, pageProps }) {
             padding: 1px 2px !important;
           }
 
+          .fc-daygrid-event .fc-event-title {
+            font-size: 9px !important;
+            font-weight: 600 !important;
+          }
+
           .fc-timegrid-event .fc-event-title {
             font-size: 8px !important;
             font-weight: 700 !important;
             text-shadow: 0 1px 2px rgba(0,0,0,0.9) !important;
+            color: white !important;
           }
 
           .fc-timegrid-event .fc-event-time {
             font-size: 7px !important;
             font-weight: 600 !important;
+            color: white !important;
           }
           
           .fc-col-header-cell {
