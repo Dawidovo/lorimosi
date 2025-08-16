@@ -7,12 +7,14 @@ import interactionPlugin from '@fullcalendar/interaction';
 
 const userColors = {
   'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': '#ff4f00',
-  '88a63a7f-b350-4704-9b1e-44445a6f33bb': '#4cafef'
+  '88a63a7f-b350-4704-9b1e-44445a6f33bb': '#4cafef',
+  'together': '#8b5cf6' // Violett für gemeinsame Termine
 };
 
 const userNames = {
   'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': 'Mosi',
-  '88a63a7f-b350-4704-9b1e-44445a6f33bb': 'Lori'
+  '88a63a7f-b350-4704-9b1e-44445a6f33bb': 'Lori',
+  'together': 'Together ❤️'
 };
 
 export default function Home() {
@@ -148,47 +150,73 @@ export default function Home() {
           let endsAt = info.endStr;
           let isAllDay = info.allDay;
 
-          const useSpecificTime = confirm('Möchten Sie eine spezielle Uhrzeit festlegen?\n\nOK = Uhrzeit eingeben\nAbbrechen = Ganztägiger Termin');
-          
-          if (useSpecificTime) {
-            const startTime = prompt('Startzeit (Format: HH:MM, z.B. 14:30):', '09:00');
-            if (startTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(startTime)) {
-              const endTime = prompt('Endzeit (Format: HH:MM, z.B. 16:00):', '10:00');
-              if (endTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(endTime)) {
-                const startDate = new Date(info.start);
-                const endDate = new Date(info.end || info.start);
-                
-                const [startHour, startMin] = startTime.split(':');
-                const [endHour, endMin] = endTime.split(':');
-                
-                startDate.setHours(parseInt(startHour), parseInt(startMin), 0, 0);
-                endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
-                
-                if (endDate <= startDate) {
-                  endDate.setDate(endDate.getDate() + 1);
-                }
-                
-                startsAt = startDate.toISOString();
-                endsAt = endDate.toISOString();
-                isAllDay = false;
-              } else {
-                alert('Ungültige Endzeit. Termin wird als ganztägig angelegt.');
-                isAllDay = true;
-              }
+          // Prüfe ob mehrtägige Auswahl (nur in Monatsansicht möglich)
+          const isMultiDay = info.start && info.end && 
+                            (info.end.getTime() - info.start.getTime()) > 24 * 60 * 60 * 1000;
+
+          if (isMultiDay) {
+            // Mehrtägiger Termin (z.B. Urlaub)
+            const confirmMultiDay = confirm(`Mehrtägiger Termin "${title}" vom ${info.start.toLocaleDateString('de-DE')} bis ${new Date(info.end.getTime() - 1).toLocaleDateString('de-DE')}?\n\nOK = Mehrtägig\nAbbrechen = Nur einen Tag`);
+            
+            if (confirmMultiDay) {
+              // Mehrtägig als Ganztag-Event
+              isAllDay = true;
+              startsAt = info.startStr;
+              endsAt = info.endStr;
             } else {
-              alert('Ungültige Startzeit. Termin wird als ganztägig angelegt.');
+              // Nur ersten Tag nehmen
+              const endOfFirstDay = new Date(info.start);
+              endOfFirstDay.setDate(endOfFirstDay.getDate() + 1);
+              endsAt = endOfFirstDay.toISOString().split('T')[0];
               isAllDay = true;
             }
           } else {
-            isAllDay = true;
+            // Eintägiger Termin - normale Uhrzeit-Abfrage
+            const useSpecificTime = confirm('Möchten Sie eine spezielle Uhrzeit festlegen?\n\nOK = Uhrzeit eingeben\nAbbrechen = Ganztägiger Termin');
+            
+            if (useSpecificTime) {
+              const startTime = prompt('Startzeit (Format: HH:MM, z.B. 14:30):', '09:00');
+              if (startTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(startTime)) {
+                const endTime = prompt('Endzeit (Format: HH:MM, z.B. 16:00):', '10:00');
+                if (endTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(endTime)) {
+                  const startDate = new Date(info.start);
+                  const endDate = new Date(info.end || info.start);
+                  
+                  const [startHour, startMin] = startTime.split(':');
+                  const [endHour, endMin] = endTime.split(':');
+                  
+                  startDate.setHours(parseInt(startHour), parseInt(startMin), 0, 0);
+                  endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
+                  
+                  if (endDate <= startDate) {
+                    endDate.setDate(endDate.getDate() + 1);
+                  }
+                  
+                  startsAt = startDate.toISOString();
+                  endsAt = endDate.toISOString();
+                  isAllDay = false;
+                } else {
+                  alert('Ungültige Endzeit. Termin wird als ganztägig angelegt.');
+                  isAllDay = true;
+                }
+              } else {
+                alert('Ungültige Startzeit. Termin wird als ganztägig angelegt.');
+                isAllDay = true;
+              }
+            } else {
+              isAllDay = true;
+            }
           }
 
           const location = prompt('Ort (optional):') || null;
 
+          // Together-Option hinzufügen
+          const isTogetherEvent = confirm('Ist das ein gemeinsamer Termin für euch beide?\n\n💕 OK = Together (Violett)\n👤 Abbrechen = Nur für mich');
+
           try {
             const { data, error } = await supabase.from('events').insert({
-              owner: user.id,
-              owner_name: user.email.split('@')[0],
+              owner: isTogetherEvent ? 'together' : user.id,
+              owner_name: isTogetherEvent ? 'Together ❤️' : user.email.split('@')[0],
               title,
               location,
               starts_at: startsAt,
@@ -272,13 +300,28 @@ export default function Home() {
           const event = info.event;
           const props = event.extendedProps;
           
-          const startTime = event.start ? event.start.toLocaleString('de-DE') : 'Unbekannt';
-          const endTime = event.end ? event.end.toLocaleString('de-DE') : 'Unbekannt';
+          const startTime = event.start ? event.start.toLocaleDateString('de-DE') : 'Unbekannt';
+          const endTime = event.end ? new Date(event.end.getTime() - 1).toLocaleDateString('de-DE') : 'Unbekannt';
           const ownerName = userNames[props.owner] || props.owner_name || 'Unbekannt';
           
+          // Prüfe ob mehrtägig
+          const isMultiDay = event.start && event.end && 
+                            (event.end.getTime() - event.start.getTime()) > 24 * 60 * 60 * 1000;
+          
           let details = `📅 ${event.title}\n\n`;
-          details += `🕐 Von: ${startTime}\n`;
-          details += `🕐 Bis: ${endTime}\n`;
+          
+          if (isMultiDay) {
+            details += `📆 Von: ${startTime}\n`;
+            details += `📆 Bis: ${endTime}\n`;
+            const days = Math.ceil((event.end.getTime() - event.start.getTime()) / (24 * 60 * 60 * 1000));
+            details += `⏱️ Dauer: ${days} Tag${days > 1 ? 'e' : ''}\n`;
+          } else {
+            const startTimeFormatted = event.start ? event.start.toLocaleString('de-DE') : 'Unbekannt';
+            const endTimeFormatted = event.end ? event.end.toLocaleString('de-DE') : 'Unbekannt';
+            details += `🕐 Von: ${startTimeFormatted}\n`;
+            details += `🕐 Bis: ${endTimeFormatted}\n`;
+          }
+          
           if (props.location) details += `📍 Ort: ${props.location}\n`;
           details += `👤 Erstellt von: ${ownerName}\n\n`;
           details += `Möchten Sie diesen Termin löschen?`;
@@ -355,10 +398,13 @@ export default function Home() {
         borderBottom: '1px solid #ddd'
       }}>
         <div>
-          <h1 style={{ margin: 0, color: '#333', fontSize: '20px' }}>💕 Our Plans</h1>
-          <p style={{ margin: '2px 0 0 0', color: '#666', fontSize: '12px' }}>
-            {user.email.split('@')[0]}
-          </p>
+          <h1 style={{ margin: 0, color: '#333', fontSize: '20px' }}>💕 Our future Plans 💕</h1>
+          <div style={{ margin: '2px 0 0 0', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#666' }}>{user.email.split('@')[0]}</span>
+            <span style={{ color: userColors['fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc'] }}>●</span>
+            <span style={{ color: userColors['88a63a7f-b350-4704-9b1e-44445a6f33bb'] }}>●</span>
+            <span style={{ color: userColors['together'] }}>●</span>
+          </div>
         </div>
         <button 
           onClick={async () => { 
