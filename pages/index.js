@@ -57,7 +57,25 @@ export default function Home() {
     }
   }
 
-  function isAllDayEvent(startStr, endStr) {
+  // Funktion um zur optimalen Wochenansicht zu springen (heute links)
+  function goToOptimalWeek() {
+    if (calRef.current) {
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0 = Sonntag, 1 = Montag, ..., 6 = Samstag
+      
+      // Berechne den Montag der Woche, in der heute der erste Tag sein soll
+      let targetMonday;
+      if (dayOfWeek === 0) { // Sonntag
+        targetMonday = new Date(today);
+        targetMonday.setDate(today.getDate() + 1); // Nächsten Montag
+      } else {
+        targetMonday = new Date(today);
+        targetMonday.setDate(today.getDate() - (dayOfWeek - 1)); // Montag dieser Woche
+      }
+      
+      calRef.current.gotoDate(targetMonday);
+    }
+  }
     if (!startStr || !endStr) return false;
     try {
       const start = new Date(startStr);
@@ -84,6 +102,8 @@ export default function Home() {
           center: 'title',
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
+        firstDay: 1, // Montag als ersten Tag der Woche
+        dayHeaderFormat: { weekday: 'short', day: 'numeric' },
         selectable: true,
         selectMirror: true,
         editable: true,
@@ -286,6 +306,11 @@ export default function Home() {
 
       calendar.render();
       calRef.current = calendar;
+      
+      // Nach dem Rendern zur optimalen Woche springen
+      setTimeout(() => {
+        goToOptimalWeek();
+      }, 100);
     }
   }, [user]);
 
@@ -313,7 +338,7 @@ export default function Home() {
     return (
       <main style={{ padding: 20, textAlign: 'center' }}>
         <h2>Lade Kalender...</h2>
-        <p>Bitte warte einen Moment.</p>
+        <p>Bitte warten Sie einen Moment.</p>
       </main>
     );
   }
@@ -329,14 +354,14 @@ export default function Home() {
         borderBottom: '2px solid #eee'
       }}>
         <div>
-          <h1 style={{ margin: 0, color: '#333' }}>💕 Our future plans 💕</h1>
+          <h1 style={{ margin: 0, color: '#333' }}>💕 Our future Plans 💕</h1>
           <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
             Angemeldet als: {user.email}
           </p>
         </div>
         <button 
           onClick={async () => { 
-            if (confirm('You really sure you want to logout my love?? <3')) {
+            if (confirm('Möchten Sie sich wirklich abmelden?')) {
               await supabase.auth.signOut(); 
               location.reload(); 
             }
