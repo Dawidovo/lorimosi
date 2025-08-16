@@ -11,8 +11,8 @@ const userColors = {
 };
 
 const userNames = {
-  'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': 'Du',
-  '88a63a7f-b350-4704-9b1e-44445a6f33bb': 'Freundin'
+  'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': 'Mosi',
+  '88a63a7f-b350-4704-9b1e-44445a6f33bb': 'Lori'
 };
 
 export default function Home() {
@@ -60,18 +60,9 @@ export default function Home() {
   function goToOptimalWeek() {
     if (calRef.current) {
       const today = new Date();
-      const dayOfWeek = today.getDay();
       
-      let targetMonday;
-      if (dayOfWeek === 0) {
-        targetMonday = new Date(today);
-        targetMonday.setDate(today.getDate() + 1);
-      } else {
-        targetMonday = new Date(today);
-        targetMonday.setDate(today.getDate() - (dayOfWeek - 1));
-      }
-      
-      calRef.current.gotoDate(targetMonday);
+      // Wechsle zur "futureWeek" View für optimale Zukunftsplanung
+      calRef.current.changeView('futureWeek', today);
     }
   }
 
@@ -96,13 +87,36 @@ export default function Home() {
     if (hostRef.current && !calRef.current) {
       const calendar = new Calendar(hostRef.current, {
         plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-        initialView: 'timeGridWeek',
+        initialView: 'futureWeek',
+        views: {
+          timeGridWeek: {
+            type: 'timeGrid',
+            duration: { days: 7 },
+            buttonText: 'Woche',
+            slotLabelFormat: {
+              hour: '2-digit',
+              minute: '2-digit',
+              omitZeroMinute: false,
+              meridiem: 'short'
+            }
+          },
+          futureWeek: {
+            type: 'timeGrid', 
+            duration: { days: 7 },
+            buttonText: 'Zukunft',
+            validRange: function(nowDate) {
+              return {
+                start: nowDate
+              };
+            }
+          }
+        },
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          right: 'dayGridMonth,timeGridWeek,futureWeek,timeGridDay'
         },
-        firstDay: 1,
+        firstDay: 1, // Montag als Standard, aber wird überschrieben
         dayHeaderFormat: { weekday: 'short', day: 'numeric' },
         selectable: true,
         selectMirror: true,
@@ -353,7 +367,7 @@ export default function Home() {
         </div>
         <button 
           onClick={async () => { 
-            if (confirm('Möchtenst du dich wirklich abmelden my love? <3')) {
+            if (confirm('Möchten du dich wirklich abmelden my Love? <3')) {
               await supabase.auth.signOut(); 
               location.reload(); 
             }
