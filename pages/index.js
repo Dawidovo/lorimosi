@@ -11,8 +11,8 @@ const userColors = {
 };
 
 const userNames = {
-  'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': 'Mosi',
-  '88a63a7f-b350-4704-9b1e-44445a6f33bb': 'Lori'
+  'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': 'Du',
+  '88a63a7f-b350-4704-9b1e-44445a6f33bb': 'Freundin'
 };
 
 export default function Home() {
@@ -57,25 +57,25 @@ export default function Home() {
     }
   }
 
-  // Funktion um zur optimalen Wochenansicht zu springen (heute links)
   function goToOptimalWeek() {
     if (calRef.current) {
       const today = new Date();
-      const dayOfWeek = today.getDay(); // 0 = Sonntag, 1 = Montag, ..., 6 = Samstag
+      const dayOfWeek = today.getDay();
       
-      // Berechne den Montag der Woche, in der heute der erste Tag sein soll
       let targetMonday;
-      if (dayOfWeek === 0) { // Sonntag
+      if (dayOfWeek === 0) {
         targetMonday = new Date(today);
-        targetMonday.setDate(today.getDate() + 1); // Nächsten Montag
+        targetMonday.setDate(today.getDate() + 1);
       } else {
         targetMonday = new Date(today);
-        targetMonday.setDate(today.getDate() - (dayOfWeek - 1)); // Montag dieser Woche
+        targetMonday.setDate(today.getDate() - (dayOfWeek - 1));
       }
       
       calRef.current.gotoDate(targetMonday);
     }
   }
+
+  function isAllDayEvent(startStr, endStr) {
     if (!startStr || !endStr) return false;
     try {
       const start = new Date(startStr);
@@ -102,7 +102,7 @@ export default function Home() {
           center: 'title',
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        firstDay: 1, // Montag als ersten Tag der Woche
+        firstDay: 1,
         dayHeaderFormat: { weekday: 'short', day: 'numeric' },
         selectable: true,
         selectMirror: true,
@@ -124,7 +124,6 @@ export default function Home() {
           backgroundColor: userColors[e.owner] || '#9E9E9E',
           extendedProps: {
             location: e.location,
-            description: e.description || '',
             owner: e.owner,
             owner_name: e.owner_name
           }
@@ -141,7 +140,6 @@ export default function Home() {
           let endsAt = info.endStr;
           let isAllDay = info.allDay;
 
-          // Immer Uhrzeit-Option anbieten, egal welche Ansicht
           const useSpecificTime = confirm('Möchten Sie eine spezielle Uhrzeit festlegen?\n\nOK = Uhrzeit eingeben\nAbbrechen = Ganztägiger Termin');
           
           if (useSpecificTime) {
@@ -178,7 +176,6 @@ export default function Home() {
           }
 
           const location = prompt('Ort (optional):') || null;
-          const description = prompt('Beschreibung (optional):') || null;
 
           try {
             const { data, error } = await supabase.from('events').insert({
@@ -186,7 +183,6 @@ export default function Home() {
               owner_name: user.email.split('@')[0],
               title,
               location,
-              description,
               starts_at: startsAt,
               ends_at: endsAt,
               all_day: isAllDay
@@ -208,7 +204,6 @@ export default function Home() {
               backgroundColor: userColors[newEvent.owner] || '#9E9E9E',
               extendedProps: {
                 location: newEvent.location,
-                description: newEvent.description,
                 owner: newEvent.owner,
                 owner_name: newEvent.owner_name
               }
@@ -277,7 +272,6 @@ export default function Home() {
           details += `🕐 Von: ${startTime}\n`;
           details += `🕐 Bis: ${endTime}\n`;
           if (props.location) details += `📍 Ort: ${props.location}\n`;
-          if (props.description) details += `📝 Beschreibung: ${props.description}\n`;
           details += `👤 Erstellt von: ${ownerName}\n\n`;
           details += `Möchten Sie diesen Termin löschen?`;
 
@@ -307,7 +301,6 @@ export default function Home() {
       calendar.render();
       calRef.current = calendar;
       
-      // Nach dem Rendern zur optimalen Woche springen
       setTimeout(() => {
         goToOptimalWeek();
       }, 100);
@@ -326,7 +319,6 @@ export default function Home() {
         backgroundColor: userColors[e.owner] || '#9E9E9E',
         extendedProps: {
           location: e.location,
-          description: e.description || '',
           owner: e.owner,
           owner_name: e.owner_name
         }
@@ -361,7 +353,7 @@ export default function Home() {
         </div>
         <button 
           onClick={async () => { 
-            if (confirm('Möchten Sie sich wirklich abmelden?')) {
+            if (confirm('Möchtenst du dich wirklich abmelden my love? <3')) {
               await supabase.auth.signOut(); 
               location.reload(); 
             }
