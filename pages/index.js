@@ -8,7 +8,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 const userColors = {
   'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': '#ff4f00',
   '5a1d936f-6f39-4c2a-915b-bac53b6cf627': '#00bfff',
-  'together': '#8b5cf6' // Violett für gemeinsame Termine
+  'together': '#8b5cf6'
 };
 
 const userNames = {
@@ -59,27 +59,11 @@ export default function Home() {
     }
   }
 
-  function goToOptimalWeek() {
-    if (calRef.current) {
-      const today = new Date();
-      const todayDayOfWeek = today.getDay(); // 0=Sonntag, 1=Montag, ...
-      
-      // Setze heute als ersten Tag der Woche
-      calRef.current.setOption('firstDay', todayDayOfWeek);
-      
-      // Gehe zu heute
-      calRef.current.gotoDate(today);
-    }
-  }
-
-  // Flexible Uhrzeitparserung
   function parseTimeInput(input) {
     if (!input) return null;
     
-    // Entferne Leerzeichen und mache alles lowercase
     input = input.trim().toLowerCase();
     
-    // Wenn bereits im HH:MM Format
     if (/^\d{1,2}:\d{2}$/.test(input)) {
       const [hours, minutes] = input.split(':');
       const h = parseInt(hours);
@@ -89,18 +73,15 @@ export default function Home() {
       }
     }
     
-    // Nur Zahlen ohne Doppelpunkt
     if (/^\d{1,4}$/.test(input)) {
-      const num = input.padStart(4, '0'); // z.B. "15" -> "0015", "1530" -> "1530"
+      const num = input.padStart(4, '0');
       
       if (input.length <= 2) {
-        // 1-2 Ziffern = nur Stunden (z.B. "15" -> "15:00", "3" -> "03:00")
         const hours = parseInt(input);
         if (hours >= 0 && hours <= 23) {
           return `${hours.toString().padStart(2, '0')}:00`;
         }
       } else {
-        // 3-4 Ziffern = HHMM (z.B. "1530" -> "15:30", "330" -> "03:30")
         const hours = parseInt(num.substring(0, 2));
         const minutes = parseInt(num.substring(2, 4));
         if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
@@ -111,6 +92,17 @@ export default function Home() {
     
     return null;
   }
+
+  function goToOptimalWeek() {
+    if (calRef.current) {
+      const today = new Date();
+      const todayDayOfWeek = today.getDay();
+      calRef.current.setOption('firstDay', todayDayOfWeek);
+      calRef.current.gotoDate(today);
+    }
+  }
+
+  function isAllDayEvent(startStr, endStr) {
     if (!startStr || !endStr) return false;
     try {
       const start = new Date(startStr);
@@ -150,14 +142,8 @@ export default function Home() {
           center: 'title',
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        firstDay: 0, // Dynamisch setzen - heute als erster Tag
+        firstDay: 0,
         dayHeaderFormat: { weekday: 'short', day: 'numeric' },
-        
-        // Klick auf Tages-Header aktivieren
-        dayHeaderClassNames: 'clickable-day-header',
-        
-        // Custom Event Handler für Klick auf Tag-Header
-        customButtons: {},
         selectable: true,
         selectMirror: true,
         editable: true,
@@ -195,28 +181,23 @@ export default function Home() {
           let endsAt = info.endStr;
           let isAllDay = info.allDay;
 
-          // Prüfe ob WIRKLICH mehrtägige Auswahl oder nur FullCalendar-Artefakt
           const daysDifference = Math.ceil((info.end.getTime() - info.start.getTime()) / (24 * 60 * 60 * 1000));
           const isMultiDay = daysDifference > 1 && info.view.type === 'dayGridMonth';
 
           if (isMultiDay) {
-            // Mehrtägiger Termin (z.B. Urlaub) - nur in Monatsansicht
             const confirmMultiDay = confirm(`Mehrtägiger Termin "${title}" vom ${info.start.toLocaleDateString('de-DE')} bis ${new Date(info.end.getTime() - 1).toLocaleDateString('de-DE')}?\n\nOK = Mehrtägig\nAbbrechen = Nur einen Tag`);
             
             if (confirmMultiDay) {
-              // Mehrtägig als Ganztag-Event
               isAllDay = true;
               startsAt = info.startStr;
               endsAt = info.endStr;
             } else {
-              // Nur ersten Tag nehmen
               const endOfFirstDay = new Date(info.start);
               endOfFirstDay.setDate(endOfFirstDay.getDate() + 1);
               endsAt = endOfFirstDay.toISOString().split('T')[0];
               isAllDay = true;
             }
           } else {
-            // Eintägiger Termin - normale Uhrzeit-Abfrage
             const useSpecificTime = confirm('Möchten Sie eine spezielle Uhrzeit festlegen?\n\nOK = Uhrzeit eingeben\nAbbrechen = Ganztägiger Termin');
             
             if (useSpecificTime) {
@@ -229,7 +210,7 @@ export default function Home() {
                 
                 if (parsedEndTime) {
                   const startDate = new Date(info.start);
-                  const endDate = new Date(info.start); // Verwende info.start für beide, nicht info.end
+                  const endDate = new Date(info.start);
                   
                   const [startHour, startMin] = parsedStartTime.split(':');
                   const [endHour, endMin] = parsedEndTime.split(':');
@@ -237,7 +218,6 @@ export default function Home() {
                   startDate.setHours(parseInt(startHour), parseInt(startMin), 0, 0);
                   endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
                   
-                  // Wenn Endzeit vor Startzeit, dann nächster Tag
                   if (endDate <= startDate) {
                     endDate.setDate(endDate.getDate() + 1);
                   }
@@ -248,7 +228,6 @@ export default function Home() {
                 } else {
                   alert('Ungültige Endzeit. Termin wird als ganztägig angelegt.');
                   isAllDay = true;
-                  // Stelle sicher, dass Ende am selben Tag ist
                   const endOfDay = new Date(info.start);
                   endOfDay.setDate(endOfDay.getDate() + 1);
                   endsAt = endOfDay.toISOString().split('T')[0];
@@ -256,14 +235,12 @@ export default function Home() {
               } else {
                 alert('Ungültige Startzeit. Termin wird als ganztägig angelegt.');
                 isAllDay = true;
-                // Stelle sicher, dass Ende am selben Tag ist
                 const endOfDay = new Date(info.start);
                 endOfDay.setDate(endOfDay.getDate() + 1);
                 endsAt = endOfDay.toISOString().split('T')[0];
               }
             } else {
               isAllDay = true;
-              // Stelle sicher, dass Ende am selben Tag ist für Ganztag-Events
               const endOfDay = new Date(info.start);
               endOfDay.setDate(endOfDay.getDate() + 1);
               endsAt = endOfDay.toISOString().split('T')[0];
@@ -271,8 +248,6 @@ export default function Home() {
           }
 
           const location = prompt('Ort (optional):') || null;
-
-          // Together-Option hinzufügen
           const isTogetherEvent = confirm('Ist das ein gemeinsamer Termin für euch beide?\n\n💕 OK = Together (Violett)\n👤 Abbrechen = Nur für mich');
 
           try {
@@ -368,7 +343,6 @@ export default function Home() {
           const endTime = event.end ? new Date(event.end.getTime() - 1).toLocaleDateString('de-DE') : 'Unbekannt';
           const ownerName = props.is_together ? 'Together ❤️' : (userNames[props.owner] || props.owner_name || 'Unbekannt');
           
-          // Prüfe ob mehrtägig
           const isMultiDay = event.start && event.end && 
                             (event.end.getTime() - event.start.getTime()) > 24 * 60 * 60 * 1000;
           
@@ -416,22 +390,18 @@ export default function Home() {
       calendar.render();
       calRef.current = calendar;
       
-      // Event Listener für Klick auf Tages-Header hinzufügen
       setTimeout(() => {
         const dayHeaders = document.querySelectorAll('.fc-col-header-cell');
         dayHeaders.forEach(header => {
           header.style.cursor = 'pointer';
           header.addEventListener('click', (e) => {
-            // Datum aus dem Header extrahieren
             const dateStr = header.getAttribute('data-date');
             if (dateStr) {
-              // Zur Tagesansicht wechseln und zum geklickten Datum springen
               calendar.changeView('timeGridDay', dateStr);
             }
           });
         });
         
-        // Optimale Woche setzen
         goToOptimalWeek();
       }, 100);
     }
