@@ -34,6 +34,34 @@ export default function App({ Component, pageProps }) {
       </Head>
       
       <style jsx global>{`
+        /* CSS-Variablen für Light Mode (Standard) */
+        :root {
+          --bg-primary: #f8f9fa;
+          --bg-secondary: #ffffff;
+          --text-primary: #333333;
+          --text-secondary: #666666;
+          --border-color: #dddddd;
+          --input-bg: #ffffff;
+          --input-border: #f0f0f0;
+          --shadow: 0 1px 3px rgba(0,0,0,0.1);
+          --shadow-hover: 0 2px 8px rgba(0,0,0,0.1);
+          --calendar-bg: #ffffff;
+        }
+
+        /* CSS-Variablen für Dark Mode */
+        [data-theme="dark"] {
+          --bg-primary: #1a1a1a;
+          --bg-secondary: #2d2d2d;
+          --text-primary: #ffffff;
+          --text-secondary: #cccccc;
+          --border-color: #404040;
+          --input-bg: #3a3a3a;
+          --input-border: #4a4a4a;
+          --shadow: 0 1px 3px rgba(0,0,0,0.3);
+          --shadow-hover: 0 2px 8px rgba(0,0,0,0.2);
+          --calendar-bg: #2d2d2d;
+        }
+
         * {
           box-sizing: border-box;
         }
@@ -41,8 +69,10 @@ export default function App({ Component, pageProps }) {
         body {
           margin: 0;
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background-color: #f8f9fa;
+          background-color: var(--bg-primary);
+          color: var(--text-primary);
           padding: 8px;
+          transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         .fc {
@@ -52,9 +82,9 @@ export default function App({ Component, pageProps }) {
         .fc-header-toolbar {
           margin-bottom: 0.5em !important;
           padding: 8px 12px;
-          background-color: #ffffff;
+          background-color: var(--bg-secondary) !important;
           border-radius: 6px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          box-shadow: var(--shadow);
           flex-wrap: wrap;
         }
         
@@ -86,8 +116,54 @@ export default function App({ Component, pageProps }) {
           font-size: 16px !important;
           font-weight: 600 !important;
           margin: 0 8px !important;
+          color: var(--text-primary) !important;
+        }
+
+        /* Calendar Grid und Background */
+        .fc-view-harness {
+          background-color: var(--calendar-bg) !important;
+        }
+
+        .fc-daygrid-body,
+        .fc-timegrid-body,
+        .fc-scrollgrid,
+        .fc-theme-standard td,
+        .fc-theme-standard th {
+          background-color: var(--calendar-bg) !important;
+          border-color: var(--border-color) !important;
+        }
+
+        .fc-col-header-cell {
+          padding: 6px 2px !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: background-color 0.2s ease !important;
+          background-color: var(--bg-secondary) !important;
+          color: var(--text-primary) !important;
+          border-color: var(--border-color) !important;
         }
         
+        .fc-col-header-cell:hover {
+          background-color: rgba(74, 175, 239, 0.1) !important;
+        }
+
+        .fc-daygrid-day-number {
+          padding: 4px !important;
+          font-size: 13px !important;
+          color: var(--text-primary) !important;
+        }
+
+        .fc-timegrid-slot-label {
+          font-size: 10px !important;
+          padding: 2px 4px !important;
+          color: var(--text-secondary) !important;
+        }
+
+        .fc-timegrid-axis {
+          background-color: var(--bg-secondary) !important;
+        }
+
         /* Event Styling - Farben bleiben auch im Dark Mode erhalten */
         .fc-event {
           border-radius: 4px !important;
@@ -162,47 +238,38 @@ export default function App({ Component, pageProps }) {
           background-color: #8b5cf6 !important;
           border-color: #8b5cf6 !important;
         }
-        
-        .fc-col-header-cell {
-          padding: 6px 2px !important;
-          font-size: 11px !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: background-color 0.2s ease !important;
-        }
-        
-        .fc-col-header-cell:hover {
+
+        /* Today Highlighting */
+        .fc-day-today {
           background-color: rgba(74, 175, 239, 0.1) !important;
         }
-        
-        .fc-daygrid-day-number {
-          padding: 4px !important;
-          font-size: 13px !important;
+
+        /* Dark Mode spezifische Verbesserungen */
+        [data-theme="dark"] .fc-event {
+          /* Erhöhte Sichtbarkeit im Dark Mode */
+          box-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
+          border: 1px solid rgba(255,255,255,0.3) !important;
         }
         
-        .fc-timegrid-slot-label {
-          font-size: 10px !important;
-          padding: 2px 4px !important;
+        [data-theme="dark"] .fc-event:hover {
+          box-shadow: 0 3px 6px rgba(0,0,0,0.6) !important;
+          filter: brightness(1.2) !important;
         }
         
-        /* Dark Mode Anpassungen für bessere Sichtbarkeit */
-        @media (prefers-color-scheme: dark) {
-          .fc-event {
-            /* Erhöhte Sichtbarkeit im Dark Mode */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5) !important;
-            border: 1px solid rgba(255,255,255,0.3) !important;
-          }
-          
-          .fc-event:hover {
-            box-shadow: 0 3px 6px rgba(0,0,0,0.6) !important;
-            filter: brightness(1.2) !important;
-          }
-          
-          /* Text-Shadow für bessere Lesbarkeit im Dark Mode */
-          .fc-event .fc-event-title,
-          .fc-event .fc-event-time {
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
-          }
+        /* Text-Shadow für bessere Lesbarkeit im Dark Mode */
+        [data-theme="dark"] .fc-event .fc-event-title,
+        [data-theme="dark"] .fc-event .fc-event-time {
+          text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
+        }
+
+        /* Now Indicator */
+        .fc-timegrid-now-indicator-line {
+          border-color: #ff4f00 !important;
+        }
+
+        .fc-timegrid-now-indicator-arrow {
+          border-left-color: #ff4f00 !important;
+          border-right-color: #ff4f00 !important;
         }
         
         /* Mobile-spezifische Anpassungen */
