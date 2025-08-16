@@ -7,13 +7,13 @@ import interactionPlugin from '@fullcalendar/interaction';
 
 const userColors = {
   'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': '#ff4f00',
-  '88a63a7f-b350-4704-9b1e-44445a6f33bb': '#4cafef',
+  '5a1d936f-6f39-4c2a-915b-bac53b6cf627': '#4cafef',
   'together': '#8b5cf6' // Violett für gemeinsame Termine
 };
 
 const userNames = {
   'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': 'Mosi',
-  '88a63a7f-b350-4704-9b1e-44445a6f33bb': 'Lori',
+  '5a1d936f-6f39-4c2a-915b-bac53b6cf627': 'Lori',
   'together': 'Together ❤️'
 };
 
