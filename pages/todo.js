@@ -236,4 +236,226 @@ export default function TodoPage() {
         {/* Category Tabs */}
         <div style={{
           display: 'flex',
-          backgroundColor: 'var(--bg-secondary
+          backgroundColor: 'var(--bg-secondary)',
+          borderRadius: '12px',
+          padding: '6px',
+          marginBottom: '20px',
+          boxShadow: 'var(--shadow-hover)',
+          gap: '4px'
+        }}>
+          {Object.entries(categories).map(([key, cat]) => (
+            <button
+              key={key}
+              onClick={() => setActiveCategory(key)}
+              style={{
+                flex: 1,
+                padding: '12px 8px',
+                border: 'none',
+                borderRadius: '8px',
+                backgroundColor: activeCategory === key ? cat.color : 'transparent',
+                color: activeCategory === key ? 'white' : 'var(--text-secondary)',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
+              }}
+            >
+              <span>{cat.icon}</span>
+              <span style={{ fontSize: '12px' }}>{cat.name}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Add Todo */}
+        <div style={{
+          backgroundColor: 'var(--bg-secondary)',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '20px',
+          boxShadow: 'var(--shadow-hover)'
+        }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input
+              type="text"
+              value={newTodo}
+              onChange={(e) => setNewTodo(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addTodo()}
+              placeholder={`Neue ${categories[activeCategory].name.toLowerCase()}...`}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                border: `2px solid var(--input-border)`,
+                borderRadius: '8px',
+                fontSize: '14px',
+                outline: 'none',
+                transition: 'border-color 0.2s ease',
+                backgroundColor: 'var(--input-bg)',
+                color: 'var(--text-primary)'
+              }}
+              onFocus={(e) => e.target.style.borderColor = categories[activeCategory].color}
+              onBlur={(e) => e.target.style.borderColor = 'var(--input-border)'}
+            />
+            <button
+              onClick={addTodo}
+              disabled={loading || !newTodo.trim()}
+              style={{
+                padding: '12px 20px',
+                backgroundColor: categories[activeCategory].color,
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading || !newTodo.trim() ? 0.5 : 1,
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {loading ? '...' : '+'}
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div style={{
+          backgroundColor: 'var(--bg-secondary)',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '20px',
+          boxShadow: 'var(--shadow-hover)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '24px', marginBottom: '8px' }}>
+            {categories[activeCategory].icon}
+          </div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+            {completedCount} von {filteredTodos.length} erledigt
+          </div>
+          {filteredTodos.length > 0 && (
+            <div style={{
+              width: '100%',
+              height: '6px',
+              backgroundColor: 'var(--input-border)',
+              borderRadius: '3px',
+              marginTop: '8px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                width: `${(completedCount / filteredTodos.length) * 100}%`,
+                height: '100%',
+                backgroundColor: categories[activeCategory].color,
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
+          )}
+        </div>
+
+        {/* Todo List */}
+        <div style={{
+          backgroundColor: 'var(--bg-secondary)',
+          borderRadius: '12px',
+          boxShadow: 'var(--shadow-hover)',
+          overflow: 'hidden'
+        }}>
+          {filteredTodos.length === 0 ? (
+            <div style={{
+              padding: '40px 20px',
+              textAlign: 'center',
+              color: 'var(--text-secondary)'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+                {categories[activeCategory].icon}
+              </div>
+              <p>Keine {categories[activeCategory].name.toLowerCase()} vorhanden</p>
+              <p style={{ fontSize: '12px', margin: '8px 0 0 0' }}>
+                Fügen Sie oben eine neue hinzu!
+              </p>
+            </div>
+          ) : (
+            filteredTodos.map((todo, index) => (
+              <div
+                key={todo.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '16px',
+                  borderBottom: index < filteredTodos.length - 1 ? `1px solid var(--input-border)` : 'none',
+                  backgroundColor: todo.completed ? 'var(--input-border)' : 'var(--bg-secondary)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <button
+                  onClick={() => toggleTodo(todo.id, todo.completed)}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    border: `2px solid ${categories[activeCategory].color}`,
+                    backgroundColor: todo.completed ? categories[activeCategory].color : 'transparent',
+                    cursor: 'pointer',
+                    marginRight: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    color: 'white',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {todo.completed && '✓'}
+                </button>
+                
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '14px',
+                    color: todo.completed ? 'var(--text-secondary)' : 'var(--text-primary)',
+                    textDecoration: todo.completed ? 'line-through' : 'none',
+                    transition: 'all 0.2s ease'
+                  }}>
+                    {todo.title}
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: 'var(--text-secondary)',
+                    marginTop: '4px'
+                  }}>
+                    {new Date(todo.created_at).toLocaleDateString('de-DE')}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => deleteTodo(todo.id)}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    borderRadius: '6px',
+                    fontSize: '16px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#fee';
+                    e.target.style.color = '#e53e3e';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.color = 'var(--text-secondary)';
+                  }}
+                >
+                  🗑️
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
