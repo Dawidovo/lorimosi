@@ -192,32 +192,63 @@ export default function App({ Component, pageProps }) {
         .fc-event-title-container,
         .fc-event-main {
           color: white !important;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+          font-weight: 600 !important;
         }
         
-        /* Daygrid Events */
+        /* Daygrid Events - größere, gut lesbare Events */
         .fc-daygrid-event {
           margin: 1px !important;
           border-radius: 3px !important;
+          min-height: 20px !important;
         }
         
         .fc-daygrid-event .fc-event-title {
           color: white !important;
-          font-weight: 500 !important;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+          font-weight: 600 !important;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+          font-size: 11px !important;
         }
         
-        /* Timegrid Events */
+        /* Timegrid Events - Optimiert für schmale Zeitslots */
         .fc-timegrid-event {
           border-radius: 3px !important;
           margin: 1px !important;
+          min-width: 100% !important;
+          padding: 1px 3px !important;
         }
         
-        .fc-timegrid-event .fc-event-title,
+        .fc-timegrid-event .fc-event-title {
+          color: white !important;
+          font-weight: 700 !important;
+          text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
+          font-size: 10px !important;
+          line-height: 1.2 !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+        }
+        
         .fc-timegrid-event .fc-event-time {
           color: white !important;
-          font-weight: 500 !important;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+          font-weight: 600 !important;
+          text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
+          font-size: 9px !important;
+          opacity: 0.9 !important;
+        }
+
+        /* Spezielle Verbesserungen für sehr schmale Events */
+        .fc-timegrid-event[style*="width"] {
+          min-width: 80px !important;
+        }
+
+        /* Event Content Container für bessere Kontrolle */
+        .fc-event-main {
+          padding: 1px 2px !important;
+        }
+
+        .fc-event-main-frame {
+          padding: 0 !important;
         }
         
         /* Spezifische Farb-Überschreibungen für verschiedene Event-Typen */
@@ -259,6 +290,29 @@ export default function App({ Component, pageProps }) {
         /* Text-Shadow für bessere Lesbarkeit im Dark Mode */
         [data-theme="dark"] .fc-event .fc-event-title,
         [data-theme="dark"] .fc-event .fc-event-time {
+          text-shadow: 0 2px 4px rgba(0,0,0,0.9) !important;
+          font-weight: 700 !important;
+        }
+
+        /* Light Mode - weniger starker Schatten */
+        :root .fc-event .fc-event-title,
+        :root .fc-event .fc-event-time {
+          text-shadow: 0 1px 3px rgba(0,0,0,0.7) !important;
+        }
+
+        /* Kontrast-Verbesserungen für alle Event-Farben */
+        .fc-event[style*="#ff4f00"] .fc-event-title,
+        .fc-event[style*="#ff4f00"] .fc-event-time {
+          text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
+        }
+        
+        .fc-event[style*="#00bfff"] .fc-event-title,
+        .fc-event[style*="#00bfff"] .fc-event-time {
+          text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
+        }
+        
+        .fc-event[style*="#8b5cf6"] .fc-event-title,
+        .fc-event[style*="#8b5cf6"] .fc-event-time {
           text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
         }
 
@@ -290,8 +344,19 @@ export default function App({ Component, pageProps }) {
           }
           
           .fc-event {
-            font-size: 10px !important;
-            padding: 1px 3px !important;
+            font-size: 9px !important;
+            padding: 1px 2px !important;
+          }
+
+          .fc-timegrid-event .fc-event-title {
+            font-size: 8px !important;
+            font-weight: 700 !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9) !important;
+          }
+
+          .fc-timegrid-event .fc-event-time {
+            font-size: 7px !important;
+            font-weight: 600 !important;
           }
           
           .fc-col-header-cell {
