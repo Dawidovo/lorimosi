@@ -100,6 +100,12 @@ export default function App({ Component, pageProps }) {
           padding: 6px 2px !important;
           font-size: 11px !important;
           font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: background-color 0.2s ease !important;
+        }
+        
+        .fc-col-header-cell:hover {
+          background-color: rgba(74, 175, 239, 0.1) !important;
         }
         
         .fc-daygrid-day-number {
@@ -142,6 +148,11 @@ export default function App({ Component, pageProps }) {
           .fc-col-header-cell {
             padding: 4px 1px !important;
             font-size: 10px !important;
+            cursor: pointer !important;
+          }
+          
+          .fc-col-header-cell:hover {
+            background-color: rgba(74, 175, 239, 0.1) !important;
           }
           
           .fc-daygrid-day-number {
