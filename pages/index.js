@@ -7,7 +7,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 
 const userColors = {
   'fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc': '#ff4f00',
-  '5a1d936f-6f39-4c2a-915b-bac53b6cf627': '#4cafef',
+  '5a1d936f-6f39-4c2a-915b-bac53b6cf627': '#00bfff',
   'together': '#8b5cf6' // Violett für gemeinsame Termine
 };
 
