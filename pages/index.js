@@ -114,6 +114,12 @@ export default function Home() {
         },
         firstDay: 0, // Dynamisch setzen - heute als erster Tag
         dayHeaderFormat: { weekday: 'short', day: 'numeric' },
+        
+        // Klick auf Tages-Header aktivieren
+        dayHeaderClassNames: 'clickable-day-header',
+        
+        // Custom Event Handler für Klick auf Tag-Header
+        customButtons: {},
         selectable: true,
         selectMirror: true,
         editable: true,
@@ -355,8 +361,22 @@ export default function Home() {
       calendar.render();
       calRef.current = calendar;
       
-        // Direkt nach dem Rendern optimale Woche setzen
+      // Event Listener für Klick auf Tages-Header hinzufügen
       setTimeout(() => {
+        const dayHeaders = document.querySelectorAll('.fc-col-header-cell');
+        dayHeaders.forEach(header => {
+          header.style.cursor = 'pointer';
+          header.addEventListener('click', (e) => {
+            // Datum aus dem Header extrahieren
+            const dateStr = header.getAttribute('data-date');
+            if (dateStr) {
+              // Zur Tagesansicht wechseln und zum geklickten Datum springen
+              calendar.changeView('timeGridDay', dateStr);
+            }
+          });
+        });
+        
+        // Optimale Woche setzen
         goToOptimalWeek();
       }, 100);
     }
@@ -406,7 +426,7 @@ export default function Home() {
           <div style={{ margin: '2px 0 0 0', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ color: '#666' }}>{user.email.split('@')[0]}</span>
             <span style={{ color: userColors['fe271f99-ad07-4ce1-9a22-8cdc15a8e6fc'] }}>●</span>
-            <span style={{ color: userColors['88a63a7f-b350-4704-9b1e-44445a6f33bb'] }}>●</span>
+            <span style={{ color: userColors['5a1d936f-6f39-4c2a-915b-bac53b6cf627'] }}>●</span>
             <span style={{ color: userColors['together'] }}>●</span>
           </div>
         </div>
