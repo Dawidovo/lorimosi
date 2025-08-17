@@ -70,8 +70,8 @@ export default function TodoPage() {
       const { data, error } = await supabase
         .from('todos')
         .select('*')
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: false });
+        .order('sort_order', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: true });
       
       if (error) {
         console.error('Fehler beim Laden:', error);
@@ -162,27 +162,47 @@ export default function TodoPage() {
     }
   }
 
-  async function updateTodoOrder(newTodos) {
+  async function updateTodoOrder(newFilteredTodos) {
     try {
-      // Update sort_order für alle betroffenen Todos
-      const updates = newTodos.map((todo, index) => ({
+      console.log('Updating order for todos:', newFilteredTodos.map(t => ({ id: t.id, title: t.title })));
+      
+      // Update sort_order für alle Todos in der aktuellen Kategorie
+      const updates = newFilteredTodos.map((todo, index) => ({
         id: todo.id,
         sort_order: index + 1
       }));
 
+      // Alle Updates in der Datenbank durchführen
       for (const update of updates) {
-        await supabase
+        const { error } = await supabase
           .from('todos')
           .update({ sort_order: update.sort_order })
           .eq('id', update.id);
+          
+        if (error) {
+          console.error('Fehler beim Update von Todo:', update.id, error);
+          throw error;
+        }
       }
 
-      setTodos(prev => prev.map(todo => {
-        const update = updates.find(u => u.id === todo.id);
-        return update ? { ...todo, sort_order: update.sort_order } : todo;
+      // Das lokale State komplett neu aufbauen
+      // Alle Todos außer der aktuellen Kategorie behalten
+      const otherCategoryTodos = todos.filter(todo => todo.category !== activeCategory);
+      
+      // Die neu sortierten Todos der aktuellen Kategorie hinzufügen
+      const updatedTodos = newFilteredTodos.map((todo, index) => ({
+        ...todo,
+        sort_order: index + 1
       }));
+      
+      // Neues komplettes State setzen
+      setTodos([...otherCategoryTodos, ...updatedTodos]);
+      
+      console.log('Order updated successfully');
     } catch (err) {
       console.error('Fehler beim Sortieren:', err);
+      alert('Fehler beim Sortieren. Seite wird neu geladen.');
+      loadTodos(); // Reload bei Fehler
     }
   }
 
@@ -190,12 +210,14 @@ export default function TodoPage() {
     setDraggedItem({ todo, index });
     e.dataTransfer.effectAllowed = 'move';
     e.target.style.opacity = '0.5';
+    console.log('Drag started:', todo.title, 'at index', index);
   }
 
   function handleDragEnd(e) {
     e.target.style.opacity = '1';
     setDraggedItem(null);
     setDraggedOverIndex(null);
+    console.log('Drag ended');
   }
 
   function handleDragOver(e) {
@@ -210,19 +232,28 @@ export default function TodoPage() {
 
   function handleDrop(e, dropIndex) {
     e.preventDefault();
+    console.log('Drop at index:', dropIndex);
     
-    if (!draggedItem || draggedItem.index === dropIndex) return;
+    if (!draggedItem || draggedItem.index === dropIndex) {
+      console.log('No valid drop');
+      return;
+    }
 
     const filteredTodos = todos.filter(todo => todo.category === activeCategory);
     const newTodos = [...filteredTodos];
     const draggedTodo = newTodos[draggedItem.index];
     
+    console.log('Moving', draggedTodo.title, 'from', draggedItem.index, 'to', dropIndex);
+    
     // Element entfernen und an neuer Position einfügen
     newTodos.splice(draggedItem.index, 1);
     newTodos.splice(dropIndex, 0, draggedTodo);
     
+    console.log('New order:', newTodos.map(t => t.title));
+    
     updateTodoOrder(newTodos);
     setDraggedOverIndex(null);
+    setDraggedItem(null);
   }
 
   // Touch events für mobile Geräte
@@ -281,7 +312,17 @@ export default function TodoPage() {
     setDraggedItem(null);
   }
 
-  const filteredTodos = todos.filter(todo => todo.category === activeCategory);
+  // Todos nach Kategorie filtern und sortieren
+  const filteredTodos = todos
+    .filter(todo => todo.category === activeCategory)
+    .sort((a, b) => {
+      // Erst nach sort_order, dann nach created_at
+      if (a.sort_order !== b.sort_order) {
+        return (a.sort_order || 0) - (b.sort_order || 0);
+      }
+      return new Date(a.created_at) - new Date(b.created_at);
+    });
+    
   const completedCount = filteredTodos.filter(todo => todo.completed).length;
 
   if (!user) {
@@ -593,7 +634,7 @@ export default function TodoPage() {
                     color: 'var(--text-secondary)',
                     marginTop: '4px'
                   }}>
-                    {new Date(todo.created_at).toLocaleDateString('de-DE')}
+                    {new Date(todo.created_at).toLocaleDateString('de-DE')} • Pos: {todo.sort_order || 'N/A'}
                   </div>
                 </div>
 
